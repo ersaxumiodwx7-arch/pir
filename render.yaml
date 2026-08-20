@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: formflow
+    runtime: node
+    plan: free
+    buildCommand: cd server && npm install && cd ../client && npm install && npm run build
+    startCommand: cd server && NODE_ENV=production node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:./formflow.db
+    healthCheckPath: /api/auth/login

@@ -1,0 +1,683 @@
+/* ============================================
+   Client Login - Professional Banking Landing Page
+   ============================================ */
+
+.banking-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Top Banner */
+.banking-top-banner {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 10px 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.banner-icon {
+  font-size: 16px;
+}
+
+/* Trusted By Bar */
+.banking-trusted-bar {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 16px 24px;
+}
+
+.trusted-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.trusted-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.trusted-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.bank-logo {
+  font-size: 16px;
+  font-weight: 700;
+  color: #475569;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.bank-logo:hover {
+  opacity: 1;
+}
+
+/* Official Website Bar */
+.banking-official-bar {
+  background: #ffffff;
+  border-bottom: 2px solid #e5e7eb;
+  padding: 10px 24px;
+}
+
+.official-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.official-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.flag-icon {
+  font-size: 16px;
+}
+
+.official-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-placeholder {
+  font-size: 13px;
+  color: #94a3b8;
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.search-icon {
+  font-size: 16px;
+}
+
+/* Main Navigation */
+.banking-nav {
+  background: #0f172a;
+  padding: 0 24px;
+}
+
+.nav-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+}
+
+.fdic-logo-text {
+  font-size: 32px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 2px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+}
+
+.nav-signin {
+  background: #3b82f6;
+  color: #ffffff !important;
+  padding: 10px 20px;
+  border-radius: 6px;
+}
+
+.nav-signin:hover {
+  background: #2563eb;
+}
+
+/* Hero Section */
+.banking-hero {
+  background: linear-gradient(180deg, #0f172a 0%, #1e3a5f 100%);
+  padding: 60px 24px 80px;
+  min-height: 500px;
+}
+
+.hero-content {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 28px;
+}
+
+.badge-icon {
+  font-size: 16px;
+}
+
+.hero-title {
+  font-size: 56px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+  margin: 0 0 24px;
+  letter-spacing: -1px;
+}
+
+.hero-title em {
+  font-style: italic;
+  color: #3b82f6;
+}
+
+.hero-description {
+  font-size: 18px;
+  color: #94a3b8;
+  line-height: 1.7;
+  margin: 0 auto 28px;
+  max-width: 600px;
+}
+
+.hero-trust-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.trust-icon-green {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.trust-icon-blue {
+  font-size: 16px;
+}
+
+/* Login Form Container */
+.login-form-container {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+}
+
+.banking-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-group input {
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: #ffffff;
+}
+
+.form-group input::placeholder {
+  color: #94a3b8;
+}
+
+/* Buttons */
+.banking-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.banking-btn-primary:hover {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.banking-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-icon {
+  font-size: 16px;
+}
+
+.btn-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.banking-btn-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.banking-btn-text:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.reset-info {
+  font-size: 14px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+}
+
+/* Login Trust Footer */
+.login-trust-footer {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.footer-trust {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Feature Cards */
+.banking-features {
+  max-width: 1200px;
+  margin: -40px auto 0;
+  padding: 0 24px;
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.feature-icon {
+  width: 64px;
+  height: 64px;
+  background: #f1f5f9;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 20px;
+}
+
+.feature-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 12px;
+}
+
+.feature-card p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Footer */
+.banking-footer {
+  background: #0f172a;
+  padding: 40px 24px;
+  margin-top: 80px;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-logo {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.footer-left p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-links a {
+  font-size: 13px;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .banking-top-banner {
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+
+  .trusted-logos {
+    gap: 20px;
+  }
+
+  .bank-logo {
+    font-size: 14px;
+  }
+
+  .nav-links {
+    gap: 16px;
+  }
+
+  .nav-link {
+    font-size: 12px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+  }
+
+  .hero-description {
+    font-size: 16px;
+  }
+
+  .hero-trust-indicators {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .login-trust-footer {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .banking-features {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    gap: 24px;
+    text-align: center;
+  }
+
+  .footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+  }
+}
+
+/* Agent Verification Result */
+.agent-result {
+  margin-top: 24px;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.agent-result.verified {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.agent-result.not-verified {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.agent-result-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 auto 16px;
+}
+
+.agent-result-icon.verified {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.agent-result-icon.not-verified {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.agent-result h4 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 16px;
+}
+
+.agent-result.verified h4 {
+  color: #059669;
+}
+
+.agent-result.not-verified h4 {
+  color: #dc2626;
+}
+
+.agent-info {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.agent-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.agent-info-row:last-child {
+  border-bottom: none;
+}
+
+.agent-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.agent-value {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.agent-value.agent-id {
+  font-family: monospace;
+  color: #3b82f6;
+}
+
+.agent-verified-text {
+  font-size: 13px;
+  color: #059669;
+  font-weight: 500;
+  margin: 0;
+}
+
+.agent-not-verified-text {
+  font-size: 14px;
+  color: #dc2626;
+  margin: 0;
+}
+
+/* Loading Animation */
+.bank-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.bank-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
