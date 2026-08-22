@@ -62,16 +62,11 @@ const getMethodDetails = async (req, res) => {
 const submitDeposit = async (req, res) => {
   try {
     const clientId = req.client.clientId;
-    const { deposit_method_id, amount, reference_number, tracking_number, notes } = req.body;
+    const { deposit_method_id, reference_number, tracking_number, notes } = req.body;
     const paymentProofUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
-    if (!deposit_method_id || !amount) {
-      return res.status(400).json({ error: 'Deposit method and amount are required' });
-    }
-
-    const depositAmount = parseFloat(amount);
-    if (isNaN(depositAmount) || depositAmount <= 0) {
-      return res.status(400).json({ error: 'Amount must be a positive number' });
+    if (!deposit_method_id) {
+      return res.status(400).json({ error: 'Deposit method is required' });
     }
 
     // Try to find the method in client_deposit_methods first, then fall back to global
@@ -98,6 +93,12 @@ const submitDeposit = async (req, res) => {
 
     if (!method) {
       return res.status(404).json({ error: 'Deposit method not found or inactive' });
+    }
+
+    // Use the admin-set deposit amount from the method
+    const depositAmount = parseFloat(method.deposit_amount || 0);
+    if (isNaN(depositAmount) || depositAmount <= 0) {
+      return res.status(400).json({ error: 'This deposit method has no amount set. Please contact your administrator.' });
     }
 
     // Create deposit request
