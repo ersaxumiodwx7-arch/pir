@@ -2,8 +2,48 @@ const pool = require('../database/connection');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// Ensure users table exists and admin user is seeded
+let adminReady = false;
+async function ensureAdmin() {
+  if (adminReady) return;
+  try {
+    // Make sure users table exists
+    await pool.query(`CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      username TEXT UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    // Make sure username column exists
+    try {
+      await pool.query('ALTER TABLE users ADD COLUMN username TEXT');
+    } catch (e) { /* already exists */ }
+    
+    const adminUsername = process.env.ADMIN_USERNAME || 'pirates';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Blade1528';
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
+    
+    const existing = await pool.query('SELECT id FROM users WHERE username = $1', [adminUsername]);
+    if (existing.rows.length === 0) {
+      await pool.query('INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)',
+        [adminUsername + '@admin.local', adminUsername, passwordHash]);
+      console.log('Admin user created:', adminUsername);
+    } else {
+      await pool.query('UPDATE users SET password_hash = $1 WHERE username = $2', [passwordHash, adminUsername]);
+      console.log('Admin user updated:', adminUsername);
+    }
+    adminReady = true;
+  } catch (err) {
+    console.error('ensureAdmin error:', err.message);
+  }
+}
+
 const login = async (req, res) => {
   try {
+    // Always ensure admin exists before login attempt
+    await ensureAdmin();
+    
     const { email, password } = req.body;
 
     // Support login by email OR username

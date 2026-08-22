@@ -109,39 +109,9 @@ async function initDatabase() {
     // Column already exists, ignore
   }
 
-  // Always ensure admin user exists with correct credentials (UPSERT)
-  try {
-    const adminUsername = process.env.ADMIN_USERNAME || 'pirates';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Blade1528';
-    const passwordHash = await bcrypt.hash(adminPassword, 10);
-    
-    // Try to find existing user first
-    const existing = await pool.query('SELECT id FROM users WHERE username = $1', [adminUsername]);
-    
-    if (existing.rows.length === 0) {
-      // Insert new admin
-      await pool.query(
-        'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)',
-        [adminUsername + '@admin.local', adminUsername, passwordHash]
-      );
-      console.log(`Admin user CREATED: ${adminUsername}`);
-    } else {
-      // Always update password to ensure it's correct
-      await pool.query('UPDATE users SET password_hash = $1 WHERE username = $2', [passwordHash, adminUsername]);
-      console.log(`Admin user UPDATED: ${adminUsername}`);
-    }
-    
-    // Verify the user exists and password works
-    const verify = await pool.query('SELECT id, username, email FROM users WHERE username = $1', [adminUsername]);
-    const verifyHash = await pool.query('SELECT password_hash FROM users WHERE username = $1', [adminUsername]);
-    if (verifyHash.rows.length > 0) {
-      const pwOk = await bcrypt.compare(adminPassword, verifyHash.rows[0].password_hash);
-      console.log(`Admin verification: user=${verify.rows.length > 0 ? 'found' : 'NOT FOUND'}, password=${pwOk ? 'OK' : 'FAIL'}`);
-    }
-  } catch (err) {
-    console.error('Admin seed error:', err.message);
-    console.error('Admin seed error stack:', err.stack);
-  }
+  // Admin user is now seeded on-demand by the login handler (authController.js)
+  // This avoids race conditions and startup failures
+  console.log('Database initialization completed');
 }
 
 // Ensure JWT_SECRET is set (fallback for environments where it's not configured)
