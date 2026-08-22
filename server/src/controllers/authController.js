@@ -46,10 +46,10 @@ const login = async (req, res) => {
     
     const { email, password } = req.body;
 
-    // Support login by email OR username
+    // Support login by email OR username (use separate params for SQLite compat)
     const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1 OR username = $1',
-      [email]
+      'SELECT * FROM users WHERE email = $1 OR username = $2',
+      [email, email]
     );
     
     console.log('Login attempt for:', email);

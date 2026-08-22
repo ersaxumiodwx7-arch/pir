@@ -136,8 +136,8 @@ app.get('/api/debug/admin', async (req, res) => {
     }));
     // Also test the exact login query
     const loginQuery = await pool.query(
-      'SELECT id, email, username FROM users WHERE email = $1 OR username = $1',
-      ['pirates']
+      'SELECT id, email, username FROM users WHERE email = $1 OR username = $2',
+      ['pirates', 'pirates']
     );
     res.json({
       userCount: users.length,
