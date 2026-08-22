@@ -23,7 +23,7 @@ const AdminClientDetail = () => {
   const [showDepositMethodForm, setShowDepositMethodForm] = useState(false);
   const [editingDepositMethod, setEditingDepositMethod] = useState(null);
   const [depositMethodForm, setDepositMethodForm] = useState({
-    method_name: '', method_type: 'wire_transfer', instructions: '',
+    method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '',
     recipient_name: '', bank_name: '', account_number: '', routing_number: '',
     payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true
   });
@@ -116,7 +116,7 @@ const AdminClientDetail = () => {
       }
       setShowDepositMethodForm(false);
       setEditingDepositMethod(null);
-      setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true });
+      setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true });
       loadClientDepositMethods();
     } catch (error) { toast.error(error.response?.data?.error || 'Failed to save deposit method'); }
   };
@@ -126,6 +126,7 @@ const AdminClientDetail = () => {
     setDepositMethodForm({
       method_name: method.method_name,
       method_type: method.method_type,
+      deposit_amount: method.deposit_amount || '',
       instructions: method.instructions || '',
       recipient_name: method.recipient_name || '',
       bank_name: method.bank_name || '',
@@ -150,7 +151,7 @@ const AdminClientDetail = () => {
 
   const handleCancelDepositMethod = () => {
     setEditingDepositMethod(null);
-    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true });
+    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true });
     setShowDepositMethodForm(false);
   };
 
@@ -607,6 +608,9 @@ const AdminClientDetail = () => {
                     <option value="shipment">Shipment / Physical Delivery</option>
                     <option value="other">Other</option>
                   </select>
+                </div>
+                <div className="admin-form-field"><label>Deposit Amount ($) *</label>
+                  <input type="number" step="0.01" min="0" value={depositMethodForm.deposit_amount} onChange={(e) => setDepositMethodForm({...depositMethodForm, deposit_amount: e.target.value})} required placeholder="e.g. 5200" />
                 </div>
                 <div className="admin-form-field"><label>Recipient Name</label>
                   <input type="text" value={depositMethodForm.recipient_name} onChange={(e) => setDepositMethodForm({...depositMethodForm, recipient_name: e.target.value})} placeholder="Who to pay" />

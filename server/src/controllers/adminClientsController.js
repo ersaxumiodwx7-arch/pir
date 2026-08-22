@@ -775,16 +775,16 @@ const getClientDepositMethods = async (req, res) => {
 const createClientDepositMethod = async (req, res) => {
   try {
     const { id } = req.params;
-    const { method_name, method_type, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active } = req.body;
 
     if (!method_name || !method_type) {
       return res.status(400).json({ error: 'Method name and type are required' });
     }
 
     const result = await pool.query(
-      `INSERT INTO client_deposit_methods (client_id, method_name, method_type, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-      [id, method_name, method_type, instructions || null, recipient_name || null, bank_name || null, account_number || null, routing_number || null, payment_address || null, nearest_branch_map_link || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1]
+      `INSERT INTO client_deposit_methods (client_id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+      [id, method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, bank_name || null, account_number || null, routing_number || null, payment_address || null, nearest_branch_map_link || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1]
     );
 
     res.status(201).json(result.rows[0]);
@@ -797,7 +797,7 @@ const createClientDepositMethod = async (req, res) => {
 const updateClientDepositMethod = async (req, res) => {
   try {
     const { id, methodId } = req.params;
-    const { method_name, method_type, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, sort_order } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, sort_order } = req.body;
 
     const setClauses = [];
     const params = [];
@@ -805,6 +805,7 @@ const updateClientDepositMethod = async (req, res) => {
 
     if (method_name !== undefined) { setClauses.push(`method_name = $${paramIndex}`); params.push(method_name); paramIndex++; }
     if (method_type !== undefined) { setClauses.push(`method_type = $${paramIndex}`); params.push(method_type); paramIndex++; }
+    if (deposit_amount !== undefined) { setClauses.push(`deposit_amount = $${paramIndex}`); params.push(deposit_amount); paramIndex++; }
     if (instructions !== undefined) { setClauses.push(`instructions = $${paramIndex}`); params.push(instructions); paramIndex++; }
     if (recipient_name !== undefined) { setClauses.push(`recipient_name = $${paramIndex}`); params.push(recipient_name); paramIndex++; }
     if (bank_name !== undefined) { setClauses.push(`bank_name = $${paramIndex}`); params.push(bank_name); paramIndex++; }

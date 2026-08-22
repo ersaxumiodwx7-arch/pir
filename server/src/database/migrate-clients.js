@@ -89,6 +89,7 @@ async function migrateClientSchema() {
       const hasAccountNum2 = (cdmCols.rows || []).some(c => c.name === 'account_number');
       const hasRoutingNum2 = (cdmCols.rows || []).some(c => c.name === 'routing_number');
       const hasMapLink = (cdmCols.rows || []).some(c => c.name === 'nearest_branch_map_link');
+      const hasDepositAmt = (cdmCols.rows || []).some(c => c.name === 'deposit_amount');
       if (!hasPaymentAddr2 && cdmCols.rows.length > 0) {
         await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN payment_address VARCHAR(500)');
         console.log('Schema migration: added client_deposit_methods.payment_address');
@@ -112,6 +113,10 @@ async function migrateClientSchema() {
       if (!hasMapLink && cdmCols.rows.length > 0) {
         await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN nearest_branch_map_link VARCHAR(1000)');
         console.log('Schema migration: added client_deposit_methods.nearest_branch_map_link');
+      }
+      if (!hasDepositAmt && cdmCols.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN deposit_amount DECIMAL(15,2) DEFAULT 0');
+        console.log('Schema migration: added client_deposit_methods.deposit_amount');
       }
     } catch (e) {
       // Table may not exist yet - that's fine
