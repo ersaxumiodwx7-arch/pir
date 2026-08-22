@@ -12,6 +12,7 @@ const AdminDepositMethods = () => {
   const [formData, setFormData] = useState({
     method_name: '',
     method_type: 'wire_transfer',
+    deposit_amount: '',
     instructions: '',
     recipient_name: '',
     account_details: '',
@@ -58,6 +59,7 @@ const AdminDepositMethods = () => {
     setFormData({
       method_name: method.method_name,
       method_type: method.method_type,
+      deposit_amount: method.deposit_amount || '',
       instructions: method.instructions || '',
       recipient_name: method.recipient_name || '',
       account_details: method.account_details || '',
@@ -91,6 +93,7 @@ const AdminDepositMethods = () => {
     setFormData({
       method_name: '',
       method_type: 'wire_transfer',
+      deposit_amount: '',
       instructions: '',
       recipient_name: '',
       account_details: '',
@@ -244,6 +247,9 @@ const AdminDepositMethods = () => {
                           <option value="wire_transfer">Wire Transfer</option>
                           <option value="zelle">Zelle</option>
                           <option value="cashapp">Cash App</option>
+                          <option value="apple_pay">Apple Pay</option>
+                          <option value="venmo">Venmo</option>
+                          <option value="bank_deposit">Bank Deposit</option>
                           <option value="shipment">Shipment / Physical</option>
                           <option value="check">Check</option>
                           <option value="other">Other</option>
@@ -252,6 +258,18 @@ const AdminDepositMethods = () => {
                     </div>
 
                     <div className="form-row">
+                      <div className="form-group">
+                        <label>Deposit Amount ($) *</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={formData.deposit_amount}
+                          onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
+                          placeholder="Fixed deposit amount"
+                          required
+                        />
+                      </div>
                       <div className="form-group">
                         <label>Recipient Name</label>
                         <input

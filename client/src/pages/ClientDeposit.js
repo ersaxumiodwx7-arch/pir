@@ -4,6 +4,81 @@ import { CreditCardIcon, AlertCircleIcon, CheckCircleIcon, ClockIcon, FileTextIc
 import toast from 'react-hot-toast';
 import './ClientPages.css';
 
+const logoMap = {
+  apple_pay: '/payment-logos/apple-pay.png',
+  venmo: '/payment-logos/venmo.png',
+  cashapp: '/payment-logos/cashapp.png',
+  zelle: '/payment-logos/zelle.png',
+};
+
+const MethodLogo = ({ methodType, size = 48 }) => {
+  const src = logoMap[methodType];
+  if (src) {
+    return <img src={src} alt={methodType} style={{ width: size, height: size, borderRadius: 10, objectFit: 'cover' }} />;
+  }
+  // Fallback SVGs for non-brand methods
+  const fallbacks = {
+    wire_transfer: (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <rect width="48" height="48" rx="10" fill="#1a1a2e"/>
+        <path d="M14 34V18l10-6 10 6v16" stroke="#4fc3f7" strokeWidth="2" fill="none"/>
+        <path d="M18 34v-8h12v8" stroke="#4fc3f7" strokeWidth="2" fill="none"/>
+        <circle cx="24" cy="22" r="2" fill="#4fc3f7"/>
+      </svg>
+    ),
+    bank_deposit: (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <rect width="48" height="48" rx="10" fill="#0d47a1"/>
+        <path d="M24 10L8 20h32L24 10z" fill="#fff"/>
+        <rect x="12" y="22" width="4" height="10" fill="#fff"/>
+        <rect x="22" y="22" width="4" height="10" fill="#fff"/>
+        <rect x="32" y="22" width="4" height="10" fill="#fff"/>
+        <rect x="8" y="34" width="32" height="3" fill="#fff"/>
+      </svg>
+    ),
+    shipment: (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <rect width="48" height="48" rx="10" fill="#ff8f00"/>
+        <rect x="12" y="18" width="20" height="14" rx="2" fill="#fff"/>
+        <path d="M32 22h4l4 6v4h-8v-10z" fill="#fff"/>
+        <circle cx="18" cy="34" r="3" fill="#fff"/>
+        <circle cx="36" cy="34" r="3" fill="#fff"/>
+      </svg>
+    ),
+    check: (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <rect width="48" height="48" rx="10" fill="#2e7d32"/>
+        <rect x="12" y="12" width="24" height="24" rx="2" fill="#fff"/>
+        <path d="M18 24l4 4 8-8" stroke="#2e7d32" strokeWidth="2.5" fill="none"/>
+      </svg>
+    ),
+    other: (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <rect width="48" height="48" rx="10" fill="#546e7a"/>
+        <circle cx="24" cy="24" r="4" fill="#fff"/>
+        <circle cx="16" cy="24" r="4" fill="#fff"/>
+        <circle cx="32" cy="24" r="4" fill="#fff"/>
+      </svg>
+    )
+  };
+  return fallbacks[methodType] || fallbacks.other;
+};
+
+const formatMethodType = (type) => {
+  const labels = {
+    apple_pay: 'Apple Pay',
+    venmo: 'Venmo',
+    cashapp: 'Cash App',
+    zelle: 'Zelle',
+    wire_transfer: 'Wire Transfer',
+    bank_deposit: 'Bank Deposit',
+    shipment: 'Shipment / Physical',
+    check: 'Check',
+    other: 'Other'
+  };
+  return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
+
 const CopyButton = ({ text }) => {
   const [copied, setCopied] = useState(false);
 
@@ -39,12 +114,10 @@ const ClientDeposit = () => {
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    amount: '',
     reference_number: '',
     tracking_number: '',
     notes: ''
   });
-  const [paymentProof, setPaymentProof] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -71,26 +144,21 @@ const ClientDeposit = () => {
   const handleSelectMethod = (method) => {
     setSelectedMethod(method);
     setShowForm(true);
-    setFormData({ amount: '', reference_number: '', tracking_number: '', notes: '' });
+    setFormData({ reference_number: '', tracking_number: '', notes: '' });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      setError('Please enter a valid amount');
-      return;
-    }
 
     try {
       setSubmitting(true);
       setError('');
       const submitData = new FormData();
       submitData.append('deposit_method_id', selectedMethod.id);
-      submitData.append('amount', parseFloat(formData.amount));
+      submitData.append('amount', parseFloat(selectedMethod.deposit_amount || 0));
       if (formData.reference_number) submitData.append('reference_number', formData.reference_number);
       if (formData.tracking_number) submitData.append('tracking_number', formData.tracking_number);
       if (formData.notes) submitData.append('notes', formData.notes);
-      if (paymentProof) submitData.append('payment_proof', paymentProof);
 
       await clientPortalAPI.submitDeposit(submitData);
       setSuccess('Deposit request submitted successfully!');
@@ -185,10 +253,13 @@ const ClientDeposit = () => {
                   onClick={() => handleSelectMethod(method)}
                 >
                   <div className="method-icon">
-                    <CreditCardIcon size={32} />
+                    <MethodLogo methodType={method.method_type} size={48} />
                   </div>
                   <h3>{method.method_name}</h3>
-                  <p className="method-type">{method.method_type}</p>
+                  <p className="method-type-label">{formatMethodType(method.method_type)}</p>
+                  {method.deposit_amount && (
+                    <p className="method-amount">${parseFloat(method.deposit_amount).toFixed(2)}</p>
+                  )}
                   <p className="method-description">{method.instructions?.substring(0, 100)}...</p>
                   <button className="btn-select-method">
                     Select Method
@@ -241,7 +312,7 @@ const ClientDeposit = () => {
 
           <div className="selected-method-info">
             <h2>{selectedMethod?.method_name}</h2>
-            <p className="method-type">{selectedMethod?.method_type}</p>
+            <p className="method-type">{formatMethodType(selectedMethod?.method_type)}</p>
           </div>
 
           <div className="payment-instructions">
@@ -336,18 +407,25 @@ const ClientDeposit = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="deposit-form">
-            <div className="form-group">
-              <label>Deposit Amount ($) *</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                placeholder="Enter amount"
-                required
-              />
-            </div>
+            {selectedMethod?.deposit_amount ? (
+              <div className="form-group">
+                <label>Deposit Amount</label>
+                <div className="fixed-amount">${parseFloat(selectedMethod.deposit_amount).toFixed(2)}</div>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>Deposit Amount ($) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={formData.amount || ''}
+                  onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                  placeholder="Enter amount"
+                  required
+                />
+              </div>
+            )}
 
             {selectedMethod?.method_type === 'shipment' && (
               <div className="form-group">
@@ -360,25 +438,6 @@ const ClientDeposit = () => {
                 />
               </div>
             )}
-
-            <div className="form-group">
-              <label>Payment Proof (optional)</label>
-              <p className="field-hint">Upload a screenshot or receipt of your payment</p>
-              <input
-                type="file"
-                accept="image/*,.pdf"
-                onChange={(e) => setPaymentProof(e.target.files[0])}
-                className="file-input"
-              />
-              {paymentProof && (
-                <div className="file-preview">
-                  <span className="file-name">{paymentProof.name}</span>
-                  <button type="button" className="file-remove" onClick={() => setPaymentProof(null)}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  </button>
-                </div>
-              )}
-            </div>
 
             <button 
               type="submit" 

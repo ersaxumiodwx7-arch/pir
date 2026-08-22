@@ -134,6 +134,18 @@ async function migrateClientSchema() {
       // Table may not exist yet - that's fine
     }
 
+    // Ensure deposit_amount column exists on deposit_methods
+    try {
+      const dmCols2 = await pool.query("PRAGMA table_info(deposit_methods)");
+      const hasDepositAmount = (dmCols2.rows || []).some(c => c.name === 'deposit_amount');
+      if (!hasDepositAmount && dmCols2.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN deposit_amount DECIMAL(15,2) DEFAULT 0');
+        console.log('Schema migration: added deposit_methods.deposit_amount');
+      }
+    } catch (e) {
+      // Table may not exist yet
+    }
+
     console.log('Client portal schema migration completed');
   } catch (error) {
     console.error('Client schema migration failed:', error.message);

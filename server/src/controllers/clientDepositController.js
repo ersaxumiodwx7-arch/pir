@@ -6,7 +6,7 @@ const getActiveMethods = async (req, res) => {
     const clientId = req.client.clientId;
     // First try per-client methods, fall back to global methods
     const clientMethods = await pool.query(
-      'SELECT id, method_name, method_type, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM client_deposit_methods WHERE client_id = $1 AND is_active = 1 ORDER BY sort_order ASC, method_name',
+      'SELECT id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM client_deposit_methods WHERE client_id = $1 AND is_active = 1 ORDER BY sort_order ASC, method_name',
       [clientId]
     );
 
@@ -16,7 +16,7 @@ const getActiveMethods = async (req, res) => {
 
     // Fall back to global methods
     const result = await pool.query(
-      'SELECT id, method_name, method_type, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM deposit_methods WHERE is_active = 1 ORDER BY method_name'
+      'SELECT id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM deposit_methods WHERE is_active = 1 ORDER BY method_name'
     );
     res.json({ methods: result.rows });
   } catch (error) {
@@ -33,7 +33,7 @@ const getMethodDetails = async (req, res) => {
     
     // Try per-client method first
     let result = await pool.query(
-      'SELECT id, method_name, method_type, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM client_deposit_methods WHERE id = $1 AND client_id = $2 AND is_active = 1',
+      'SELECT id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM client_deposit_methods WHERE id = $1 AND client_id = $2 AND is_active = 1',
       [id, clientId]
     );
 
@@ -43,7 +43,7 @@ const getMethodDetails = async (req, res) => {
 
     // Fall back to global method
     result = await pool.query(
-      'SELECT id, method_name, method_type, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM deposit_methods WHERE id = $1 AND is_active = 1',
+      'SELECT id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes FROM deposit_methods WHERE id = $1 AND is_active = 1',
       [id]
     );
 
@@ -79,7 +79,7 @@ const submitDeposit = async (req, res) => {
     let clientDepositMethodId = null;
 
     const clientMethodResult = await pool.query(
-      'SELECT id, method_name, method_type FROM client_deposit_methods WHERE id = $1 AND client_id = $2 AND is_active = 1',
+      'SELECT id, method_name, method_type, deposit_amount FROM client_deposit_methods WHERE id = $1 AND client_id = $2 AND is_active = 1',
       [deposit_method_id, clientId]
     );
 
@@ -88,7 +88,7 @@ const submitDeposit = async (req, res) => {
       clientDepositMethodId = method.id;
     } else {
       const globalResult = await pool.query(
-        'SELECT id, method_name, method_type FROM deposit_methods WHERE id = $1 AND is_active = 1',
+        'SELECT id, method_name, method_type, deposit_amount FROM deposit_methods WHERE id = $1 AND is_active = 1',
         [deposit_method_id]
       );
       if (globalResult.rows.length > 0) {

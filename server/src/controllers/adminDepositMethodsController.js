@@ -39,16 +39,16 @@ const getMethod = async (req, res) => {
 // Create deposit method
 const createMethod = async (req, res) => {
   try {
-    const { method_name, method_type, instructions, recipient_name, account_details, payment_address, additional_notes, is_active } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active } = req.body;
 
     if (!method_name || !method_type) {
       return res.status(400).json({ error: 'Method name and type are required' });
     }
 
     const result = await pool.query(
-      `INSERT INTO deposit_methods (method_name, method_type, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-      [method_name, method_type, instructions || null, recipient_name || null, account_details || null, payment_address || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, req.user.userId]
+      `INSERT INTO deposit_methods (method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, account_details || null, payment_address || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, req.user.userId]
     );
 
     res.status(201).json(result.rows[0]);
@@ -62,7 +62,7 @@ const createMethod = async (req, res) => {
 const updateMethod = async (req, res) => {
   try {
     const { id } = req.params;
-    const { method_name, method_type, instructions, recipient_name, account_details, payment_address, additional_notes, is_active } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active } = req.body;
 
     const setClauses = [];
     const params = [];
@@ -70,6 +70,7 @@ const updateMethod = async (req, res) => {
 
     if (method_name !== undefined) { setClauses.push(`method_name = $${paramIndex}`); params.push(method_name); paramIndex++; }
     if (method_type !== undefined) { setClauses.push(`method_type = $${paramIndex}`); params.push(method_type); paramIndex++; }
+    if (deposit_amount !== undefined) { setClauses.push(`deposit_amount = $${paramIndex}`); params.push(deposit_amount); paramIndex++; }
     if (instructions !== undefined) { setClauses.push(`instructions = $${paramIndex}`); params.push(instructions); paramIndex++; }
     if (recipient_name !== undefined) { setClauses.push(`recipient_name = $${paramIndex}`); params.push(recipient_name); paramIndex++; }
     if (account_details !== undefined) { setClauses.push(`account_details = $${paramIndex}`); params.push(account_details); paramIndex++; }
