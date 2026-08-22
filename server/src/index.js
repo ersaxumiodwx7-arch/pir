@@ -146,7 +146,11 @@ async function initDatabase() {
   }
 }
 
-initDatabase();
+// Ensure JWT_SECRET is set (fallback for environments where it's not configured)
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'pirates-jwt-secret-fallback-2024';
+  console.log('WARNING: JWT_SECRET not set, using fallback secret');
+}
 
 // Routes - Existing
 app.use('/api/auth', require('./routes/auth'));
@@ -177,6 +181,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Initialize database FIRST, then start the server
+initDatabase().then(() => {
+  console.log('Database initialized successfully');
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}).catch((err) => {
+  console.error('Database initialization failed:', err.message);
+  // Still start the server even if init fails - some routes may work
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT} (with DB init errors)`);
+  });
 });
