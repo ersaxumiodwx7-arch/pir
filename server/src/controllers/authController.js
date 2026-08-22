@@ -12,15 +12,20 @@ const login = async (req, res) => {
       [email]
     );
     
+    console.log('Login attempt for:', email);
+
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      console.log('Login failed: no user found for', email);
+      return res.status(401).json({ error: 'Invalid credentials - user not found' });
     }
 
     const user = result.rows[0];
+    console.log('Login found user:', { id: user.id, username: user.username, email: user.email });
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('Password valid:', isValidPassword);
 
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid credentials - wrong password' });
     }
 
     const token = jwt.sign(

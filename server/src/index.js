@@ -166,12 +166,19 @@ app.get('/api/debug/admin', async (req, res) => {
       hashPrefix: u.password_hash ? u.password_hash.substring(0, 10) : null,
       passwordMatches: u.password_hash ? bcrypt.compareSync(testPassword, u.password_hash) : false
     }));
+    // Also test the exact login query
+    const loginQuery = await pool.query(
+      'SELECT id, email, username FROM users WHERE email = $1 OR username = $1',
+      ['pirates']
+    );
     res.json({
       userCount: users.length,
       users,
+      loginQueryResult: loginQuery.rows.length > 0 ? 'FOUND: ' + loginQuery.rows[0].username : 'NOT FOUND',
       envAdminUser: process.env.ADMIN_USERNAME || 'pirates',
       envAdminPass: process.env.ADMIN_PASSWORD ? 'SET (overriding Blade1528)' : 'NOT SET (using Blade1528)',
-      envJwt: process.env.JWT_SECRET ? 'SET' : 'NOT SET'
+      envJwt: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+      databaseUrl: process.env.DATABASE_URL ? (process.env.DATABASE_URL.startsWith('postgres') ? 'PostgreSQL' : 'SQLite') : 'DEFAULT (SQLite)'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
