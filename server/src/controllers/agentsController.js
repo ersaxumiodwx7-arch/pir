@@ -20,7 +20,7 @@ const getAllAgents = async (req, res) => {
 
     if (search) {
       params.push(`%${search}%`);
-      whereClause += ` AND (agent_id ILIKE $${params.length} OR full_name ILIKE $${params.length} OR designation ILIKE $${params.length})`;
+      whereClause += ` AND (agent_id LIKE $${params.length} OR full_name LIKE $${params.length} OR designation LIKE $${params.length})`;
     }
 
     if (status === 'active') {

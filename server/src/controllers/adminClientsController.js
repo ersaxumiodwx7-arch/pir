@@ -22,7 +22,7 @@ const getAllClients = async (req, res) => {
 
     if (search) {
       params.push(`%${search}%`);
-      whereClause += ` AND (case_id ILIKE $${params.length} OR full_name ILIKE $${params.length} OR email ILIKE $${params.length})`;
+      whereClause += ` AND (case_id LIKE $${params.length} OR full_name LIKE $${params.length} OR email LIKE $${params.length})`;
     }
 
     if (status) {

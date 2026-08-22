@@ -30,10 +30,11 @@ const getAllDeposits = async (req, res) => {
 
     const result = await pool.query(
       `SELECT dr.*, c.case_id, c.full_name as client_name, c.email as client_email,
-              dm.method_name, dm.method_type
+              COALESCE(dm.method_name, cdm.method_name) as method_name, COALESCE(dm.method_type, cdm.method_type) as method_type
        FROM deposit_requests dr
        JOIN clients c ON dr.client_id = c.id
-       JOIN deposit_methods dm ON dr.deposit_method_id = dm.id
+       LEFT JOIN deposit_methods dm ON dr.deposit_method_id = dm.id
+       LEFT JOIN client_deposit_methods cdm ON dr.client_deposit_method_id = cdm.id
        ${whereClause}
        ORDER BY dr.created_at DESC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
@@ -62,10 +63,13 @@ const getDeposit = async (req, res) => {
 
     const result = await pool.query(
       `SELECT dr.*, c.case_id, c.full_name as client_name, c.email as client_email,
-              dm.method_name, dm.method_type, dm.instructions, dm.recipient_name, dm.account_details
+              COALESCE(dm.method_name, cdm.method_name) as method_name, COALESCE(dm.method_type, cdm.method_type) as method_type,
+              COALESCE(dm.instructions, cdm.instructions) as instructions, COALESCE(dm.recipient_name, cdm.recipient_name) as recipient_name,
+              COALESCE(dm.account_details, cdm.account_number) as account_details
        FROM deposit_requests dr
        JOIN clients c ON dr.client_id = c.id
-       JOIN deposit_methods dm ON dr.deposit_method_id = dm.id
+       LEFT JOIN deposit_methods dm ON dr.deposit_method_id = dm.id
+       LEFT JOIN client_deposit_methods cdm ON dr.client_deposit_method_id = cdm.id
        WHERE dr.id = $1`,
       [id]
     );
