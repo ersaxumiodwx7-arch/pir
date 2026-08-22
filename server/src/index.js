@@ -34,6 +34,7 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
+      username TEXT UNIQUE,
       password_hash TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
@@ -100,19 +101,45 @@ async function initDatabase() {
   // Run client portal migrations
   migrateClientSchema();
 
+  // Ensure username column exists (migration for existing databases)
+  try {
+    await pool.query('ALTER TABLE users ADD COLUMN username TEXT');
+    console.log('Added username column to users table');
+  } catch (err) {
+    // Column already exists, ignore
+  }
+
   // Seed admin user if no users exist
   try {
     const result = await pool.query('SELECT COUNT(*) as count FROM users');
     const count = parseInt(result.rows[0].count);
     if (count === 0) {
-      const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+      const adminUsername = process.env.ADMIN_USERNAME || 'pirates';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Blade1528';
       const passwordHash = await bcrypt.hash(adminPassword, 10);
       await pool.query(
-        'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING *',
-        [adminEmail, passwordHash]
+        'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING *',
+        [adminUsername + '@admin.local', adminUsername, passwordHash]
       );
-      console.log(`Admin user created: ${adminEmail}`);
+      console.log(`Admin user created: ${adminUsername}`);
+    } else {
+      // Ensure the admin user has the correct credentials
+      const adminUsername = process.env.ADMIN_USERNAME || 'pirates';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Blade1528';
+      const existingAdmin = await pool.query('SELECT * FROM users WHERE username = $1', [adminUsername]);
+      if (existingAdmin.rows.length === 0) {
+        const passwordHash = await bcrypt.hash(adminPassword, 10);
+        await pool.query(
+          'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING *',
+          [adminUsername + '@admin.local', adminUsername, passwordHash]
+        );
+        console.log(`Admin user created: ${adminUsername}`);
+      } else {
+        // Update password in case it changed
+        const passwordHash = await bcrypt.hash(adminPassword, 10);
+        await pool.query('UPDATE users SET password_hash = $1 WHERE username = $2', [passwordHash, adminUsername]);
+        console.log(`Admin user updated: ${adminUsername}`);
+      }
     }
   } catch (err) {
     console.error('Admin seed error:', err.message);
