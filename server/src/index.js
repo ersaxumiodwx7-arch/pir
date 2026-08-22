@@ -133,7 +133,6 @@ async function initDatabase() {
     
     // Verify the user exists and password works
     const verify = await pool.query('SELECT id, username, email FROM users WHERE username = $1', [adminUsername]);
-    const bcrypt = require('bcryptjs');
     const verifyHash = await pool.query('SELECT password_hash FROM users WHERE username = $1', [adminUsername]);
     if (verifyHash.rows.length > 0) {
       const pwOk = await bcrypt.compare(adminPassword, verifyHash.rows[0].password_hash);
