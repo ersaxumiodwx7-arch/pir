@@ -152,6 +152,32 @@ if (!process.env.JWT_SECRET) {
   console.log('WARNING: JWT_SECRET not set, using fallback secret');
 }
 
+// Debug endpoint - check admin user (remove in production later)
+app.get('/api/debug/admin', async (req, res) => {
+  try {
+    const pool = require('./database/connection');
+    const result = await pool.query('SELECT id, email, username, password_hash FROM users');
+    const bcrypt = require('bcryptjs');
+    const testPassword = process.env.ADMIN_PASSWORD || 'Blade1528';
+    const users = result.rows.map(u => ({
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      hashPrefix: u.password_hash ? u.password_hash.substring(0, 10) : null,
+      passwordMatches: u.password_hash ? bcrypt.compareSync(testPassword, u.password_hash) : false
+    }));
+    res.json({
+      userCount: users.length,
+      users,
+      envAdminUser: process.env.ADMIN_USERNAME || 'pirates',
+      envAdminPass: process.env.ADMIN_PASSWORD ? 'SET (overriding Blade1528)' : 'NOT SET (using Blade1528)',
+      envJwt: process.env.JWT_SECRET ? 'SET' : 'NOT SET'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Routes - Existing
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/forms', require('./routes/forms'));
