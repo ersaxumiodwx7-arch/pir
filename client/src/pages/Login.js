@@ -74,10 +74,6 @@ const Login = () => {
             <CheckCircleIcon size={16} className="login-security-icon" />
             <span>Secure Access</span>
           </div>
-          <div className="login-security-item">
-            <ShieldIcon size={16} className="login-security-icon" />
-            <span>Fraud Protected</span>
-          </div>
         </div>
       </div>
     </div>
