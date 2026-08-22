@@ -22,9 +22,104 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Run client portal schema migration on startup
+// Run all schema migrations on startup
 const { migrateClientSchema } = require('./database/migrate-clients');
-migrateClientSchema();
+const bcrypt = require('bcryptjs');
+
+async function initDatabase() {
+  const pool = require('./database/connection');
+
+  // Create base tables if they don't exist (SQLite-compatible)
+  const baseSchema = `
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS forms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      logo_url TEXT,
+      unique_slug TEXT UNIQUE NOT NULL,
+      is_active INTEGER DEFAULT 1,
+      ending_description TEXT,
+      background_color TEXT DEFAULT '#ffffff',
+      background_image TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS form_fields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      label TEXT NOT NULL,
+      description TEXT,
+      placeholder TEXT,
+      required INTEGER DEFAULT 0,
+      order_index INTEGER NOT NULL,
+      options TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      form_id INTEGER NOT NULL,
+      submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE
+    );
+    CREATE TABLE IF NOT EXISTS submission_answers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      submission_id INTEGER NOT NULL,
+      field_id INTEGER NOT NULL,
+      value TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
+      FOREIGN KEY (field_id) REFERENCES form_fields(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_forms_unique_slug ON forms(unique_slug);
+    CREATE INDEX IF NOT EXISTS idx_form_fields_form_id ON form_fields(form_id);
+    CREATE INDEX IF NOT EXISTS idx_submissions_form_id ON submissions(form_id);
+    CREATE INDEX IF NOT EXISTS idx_submission_answers_submission_id ON submission_answers(submission_id);
+    CREATE INDEX IF NOT EXISTS idx_submission_answers_field_id ON submission_answers(field_id);
+  `;
+
+  const statements = baseSchema.split(';').map(s => s.trim()).filter(s => s.length > 0);
+  for (const stmt of statements) {
+    try {
+      await pool.query(stmt);
+    } catch (err) {
+      if (!err.message.includes('already exists')) {
+        console.error('Base migration warning:', err.message);
+      }
+    }
+  }
+  console.log('Base tables migration completed');
+
+  // Run client portal migrations
+  migrateClientSchema();
+
+  // Seed admin user if no users exist
+  try {
+    const result = await pool.query('SELECT COUNT(*) as count FROM users');
+    const count = parseInt(result.rows[0].count);
+    if (count === 0) {
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+      const passwordHash = await bcrypt.hash(adminPassword, 10);
+      await pool.query(
+        'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING *',
+        [adminEmail, passwordHash]
+      );
+      console.log(`Admin user created: ${adminEmail}`);
+    }
+  } catch (err) {
+    console.error('Admin seed error:', err.message);
+  }
+}
+
+initDatabase();
 
 // Routes - Existing
 app.use('/api/auth', require('./routes/auth'));
