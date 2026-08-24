@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useClientAuth } from '../context/ClientAuthContext';
 import { clientPortalAPI } from '../services/api';
-import { ShieldIcon, DashboardIcon, UserIcon, DollarIcon, CreditCardIcon, BellIcon, LogOutIcon, MenuIcon, PlusIcon } from '../components/Icons';
+import { DashboardIcon, UserIcon, DollarIcon, CreditCardIcon, BellIcon, LogOutIcon, MenuIcon, PlusIcon } from '../components/Icons';
 import './ClientLayout.css';
 import './ClientTransfer.css';
 
@@ -55,7 +55,6 @@ const ClientLayout = () => {
           <MenuIcon size={24} />
         </button>
         <div className="client-mobile-logo">
-          <ShieldIcon size={20} />
           <span>FDIC</span>
         </div>
       </div>
@@ -67,8 +66,7 @@ const ClientLayout = () => {
       <aside className={`client-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="client-sidebar-header">
           <div className="client-sidebar-logo">
-            <ShieldIcon size={28} />
-            <span>FDIC</span>
+            <span style={{ color: '#3b82f6' }}>FDIC</span>
           </div>
           <p style={{ fontSize: '11px', color: '#64748b', margin: '8px 0 0', letterSpacing: '0.3px' }}>Federal Deposit Insurance Corp.</p>
         </div>

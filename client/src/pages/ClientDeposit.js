@@ -250,7 +250,6 @@ const ClientDeposit = () => {
   return (
     <div className="client-pages-container">
       <div className="client-pages-header">
-        <CreditCardIcon size={24} />
         <h1>Add Funds</h1>
       </div>
 
