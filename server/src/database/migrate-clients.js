@@ -151,6 +151,50 @@ async function migrateClientSchema() {
       // Table may not exist yet
     }
 
+    // Ensure crypto columns exist on client_deposit_methods
+    try {
+      const cdmCols2 = await pool.query("PRAGMA table_info(client_deposit_methods)");
+      const hasCryptoType = (cdmCols2.rows || []).some(c => c.name === 'crypto_type');
+      const hasWalletAddr = (cdmCols2.rows || []).some(c => c.name === 'wallet_address');
+      const hasQrImage = (cdmCols2.rows || []).some(c => c.name === 'qr_image_url');
+      if (!hasCryptoType && cdmCols2.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN crypto_type VARCHAR(20) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.crypto_type');
+      }
+      if (!hasWalletAddr && cdmCols2.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN wallet_address VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.wallet_address');
+      }
+      if (!hasQrImage && cdmCols2.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN qr_image_url VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.qr_image_url');
+      }
+    } catch (e) {
+      // Table may not exist yet
+    }
+
+    // Ensure crypto columns exist on deposit_methods (global)
+    try {
+      const dmCols3 = await pool.query("PRAGMA table_info(deposit_methods)");
+      const hasCryptoTypeG = (dmCols3.rows || []).some(c => c.name === 'crypto_type');
+      const hasWalletAddrG = (dmCols3.rows || []).some(c => c.name === 'wallet_address');
+      const hasQrImageG = (dmCols3.rows || []).some(c => c.name === 'qr_image_url');
+      if (!hasCryptoTypeG && dmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN crypto_type VARCHAR(20) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.crypto_type');
+      }
+      if (!hasWalletAddrG && dmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN wallet_address VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.wallet_address');
+      }
+      if (!hasQrImageG && dmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN qr_image_url VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.qr_image_url');
+      }
+    } catch (e) {
+      // Table may not exist yet
+    }
+
     console.log('Client portal schema migration completed');
   } catch (error) {
     console.error('Client schema migration failed:', error.message);

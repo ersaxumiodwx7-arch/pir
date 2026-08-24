@@ -11,7 +11,39 @@ const logoMap = {
   zelle: '/payment-logos/zelle.png',
 };
 
-const MethodLogo = ({ methodType, size = 48 }) => {
+const cryptoLogos = {
+  btc: { name: 'Bitcoin', color: '#f7931a', symbol: '₿' },
+  eth: { name: 'Ethereum', color: '#627eea', symbol: 'Ξ' },
+  sol: { name: 'Solana', color: '#9945ff', symbol: '◎' },
+  usdt: { name: 'Tether', color: '#26a17b', symbol: '₮' },
+  usdc: { name: 'USD Coin', color: '#2775ca', symbol: '$' },
+  doge: { name: 'Dogecoin', color: '#c2a633', symbol: 'Ð' },
+  ltc: { name: 'Litecoin', color: '#bfbbbb', symbol: 'Ł' },
+  bnb: { name: 'BNB', color: '#f0b90b', symbol: '◆' },
+  xrp: { name: 'XRP', color: '#00aae4', symbol: '✕' },
+  matic: { name: 'Polygon', color: '#8247e5', symbol: '⬡' },
+};
+
+const CryptoLogo = ({ cryptoType, size = 48 }) => {
+  const crypto = cryptoLogos[cryptoType];
+  if (!crypto) return null;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: 12,
+      background: `linear-gradient(135deg, ${crypto.color}22, ${crypto.color}44)`,
+      border: `2px solid ${crypto.color}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.45, color: crypto.color, fontWeight: 'bold'
+    }}>
+      {crypto.symbol}
+    </div>
+  );
+};
+
+const MethodLogo = ({ methodType, cryptoType, size = 48 }) => {
+  if (methodType === 'crypto' && cryptoType) {
+    return <CryptoLogo cryptoType={cryptoType} size={size} />;
+  }
   const src = logoMap[methodType];
   if (src) {
     return <img src={src} alt={methodType} style={{ width: size, height: size, borderRadius: 10, objectFit: 'cover' }} />;
@@ -61,10 +93,10 @@ const MethodLogo = ({ methodType, size = 48 }) => {
       </svg>
     )
   };
-  return fallbacks[methodType] || fallbacks.other;
+  return fallbacks[methodType] || fallbacks.other; // crypto handled above
 };
 
-const formatMethodType = (type) => {
+const formatMethodType = (type, cryptoType) => {
   const labels = {
     apple_pay: 'Apple Pay',
     venmo: 'Venmo',
@@ -74,7 +106,8 @@ const formatMethodType = (type) => {
     bank_deposit: 'Bank Deposit',
     shipment: 'Shipment / Physical',
     check: 'Check',
-    other: 'Other'
+    other: 'Other',
+    crypto: cryptoType ? cryptoLogos[cryptoType]?.name || 'Crypto' : 'Crypto'
   };
   return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };
@@ -253,10 +286,10 @@ const ClientDeposit = () => {
                   onClick={() => handleSelectMethod(method)}
                 >
                   <div className="method-icon">
-                    <MethodLogo methodType={method.method_type} size={48} />
+                    <MethodLogo methodType={method.method_type} cryptoType={method.crypto_type} size={48} />
                   </div>
                   <h3>{method.method_name}</h3>
-                  <p className="method-type-label">{formatMethodType(method.method_type)}</p>
+                  <p className="method-type-label">{formatMethodType(method.method_type, method.crypto_type)}</p>
                   {method.deposit_amount && (
                     <p className="method-amount">${parseFloat(method.deposit_amount).toFixed(2)}</p>
                   )}
@@ -312,7 +345,7 @@ const ClientDeposit = () => {
 
           <div className="selected-method-info">
             <h2>{selectedMethod?.method_name}</h2>
-            <p className="method-type">{formatMethodType(selectedMethod?.method_type)}</p>
+            <p className="method-type">{formatMethodType(selectedMethod?.method_type, selectedMethod?.crypto_type)}</p>
           </div>
 
           <div className="payment-instructions">
@@ -392,6 +425,33 @@ const ClientDeposit = () => {
                   <span className="copy-value account-detail-value">{selectedMethod.payment_address}</span>
                   <CopyButton text={selectedMethod.payment_address} />
                 </div>
+              )}
+
+              {/* Crypto - QR Code + Wallet Address */}
+              {selectedMethod?.method_type === 'crypto' && (
+                <>
+                  {selectedMethod?.qr_image_url && (
+                    <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                      <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '8px', fontWeight: 500 }}>Scan QR Code to Pay</p>
+                      <img 
+                        src={selectedMethod.qr_image_url} 
+                        alt={`${formatMethodType('crypto', selectedMethod.crypto_type)} QR Code`}
+                        style={{ width: '200px', height: '200px', borderRadius: '12px', border: '2px solid #e2e8f0', padding: '8px', background: '#fff' }}
+                      />
+                    </div>
+                  )}
+                  {selectedMethod?.wallet_address && (
+                    <div style={{ marginTop: '12px' }}>
+                      <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '6px', fontWeight: 500 }}>
+                        {formatMethodType('crypto', selectedMethod.crypto_type)} Wallet Address
+                      </p>
+                      <div className="copy-row" style={{ background: '#f8fafc', borderRadius: '8px', padding: '10px 12px', border: '1px solid #e2e8f0' }}>
+                        <span className="copy-value account-detail-value" style={{ fontFamily: 'monospace', fontSize: '13px', wordBreak: 'break-all' }}>{selectedMethod.wallet_address}</span>
+                        <CopyButton text={selectedMethod.wallet_address} />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {selectedMethod?.instructions && (

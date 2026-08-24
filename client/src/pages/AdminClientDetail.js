@@ -25,8 +25,10 @@ const AdminClientDetail = () => {
   const [depositMethodForm, setDepositMethodForm] = useState({
     method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '',
     recipient_name: '', bank_name: '', account_number: '', routing_number: '',
-    payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true
+    payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true,
+    crypto_type: 'btc', wallet_address: '', qr_image_url: ''
   });
+  const [qrFile, setQrFile] = useState(null);
 
   // New transaction form
   const [showTxnForm, setShowTxnForm] = useState(false);
@@ -107,16 +109,27 @@ const AdminClientDetail = () => {
   const handleCreateDepositMethod = async (e) => {
     e.preventDefault();
     try {
+      let qrUrl = depositMethodForm.qr_image_url;
+      // Upload QR code if a new file was selected
+      if (qrFile) {
+        const qrFormData = new FormData();
+        qrFormData.append('logo', qrFile);
+        const { uploadAPI } = require('../services/api');
+        const qrRes = await uploadAPI.uploadLogo(qrFile);
+        qrUrl = qrRes.data.logo_url;
+      }
+      const formDataWithQr = { ...depositMethodForm, qr_image_url: qrUrl || '' };
       if (editingDepositMethod) {
-        await adminClientsAPI.updateDepositMethod(id, editingDepositMethod.id, depositMethodForm);
+        await adminClientsAPI.updateDepositMethod(id, editingDepositMethod.id, formDataWithQr);
         toast.success('Deposit method updated');
       } else {
-        await adminClientsAPI.createDepositMethod(id, depositMethodForm);
+        await adminClientsAPI.createDepositMethod(id, formDataWithQr);
         toast.success('Deposit method created');
       }
       setShowDepositMethodForm(false);
       setEditingDepositMethod(null);
-      setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true });
+      setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '' });
+      setQrFile(null);
       loadClientDepositMethods();
     } catch (error) { toast.error(error.response?.data?.error || 'Failed to save deposit method'); }
   };
@@ -135,8 +148,12 @@ const AdminClientDetail = () => {
       payment_address: method.payment_address || '',
       nearest_branch_map_link: method.nearest_branch_map_link || '',
       additional_notes: method.additional_notes || '',
-      is_active: method.is_active === 1
+      is_active: method.is_active === 1,
+      crypto_type: method.crypto_type || 'btc',
+      wallet_address: method.wallet_address || '',
+      qr_image_url: method.qr_image_url || ''
     });
+    setQrFile(null);
     setShowDepositMethodForm(true);
   };
 
@@ -151,7 +168,8 @@ const AdminClientDetail = () => {
 
   const handleCancelDepositMethod = () => {
     setEditingDepositMethod(null);
-    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true });
+    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '' });
+    setQrFile(null);
     setShowDepositMethodForm(false);
   };
 
@@ -605,6 +623,7 @@ const AdminClientDetail = () => {
                     <option value="apple_pay">Apple Pay</option>
                     <option value="venmo">Venmo</option>
                     <option value="paypal">PayPal</option>
+                    <option value="crypto">Crypto</option>
                     <option value="shipment">Shipment / Physical Delivery</option>
                     <option value="other">Other</option>
                   </select>
@@ -652,6 +671,39 @@ const AdminClientDetail = () => {
                   <div className="admin-form-field"><label>Payment Address / Phone / Email</label>
                     <input type="text" value={depositMethodForm.payment_address} onChange={(e) => setDepositMethodForm({...depositMethodForm, payment_address: e.target.value})} placeholder="Zelle email, Cash App $tag, etc." />
                   </div>
+                )}
+
+                {/* Crypto specific fields */}
+                {depositMethodForm.method_type === 'crypto' && (
+                  <>
+                    <div className="admin-form-field"><label>Crypto Type *</label>
+                      <select value={depositMethodForm.crypto_type} onChange={(e) => setDepositMethodForm({...depositMethodForm, crypto_type: e.target.value})}>
+                        <option value="btc">Bitcoin (BTC)</option>
+                        <option value="eth">Ethereum (ETH)</option>
+                        <option value="sol">Solana (SOL)</option>
+                        <option value="usdt">Tether (USDT)</option>
+                        <option value="usdc">USD Coin (USDC)</option>
+                        <option value="doge">Dogecoin (DOGE)</option>
+                        <option value="ltc">Litecoin (LTC)</option>
+                        <option value="bnb">BNB (BNB)</option>
+                        <option value="xrp">XRP (XRP)</option>
+                        <option value="matic">Polygon (MATIC)</option>
+                      </select>
+                    </div>
+                    <div className="admin-form-field"><label>Wallet Address *</label>
+                      <input type="text" value={depositMethodForm.wallet_address} onChange={(e) => setDepositMethodForm({...depositMethodForm, wallet_address: e.target.value})} placeholder="Crypto wallet address" required={depositMethodForm.method_type === 'crypto'} style={{ fontFamily: 'monospace', fontSize: '13px' }} />
+                    </div>
+                    <div className="admin-form-field admin-form-full"><label>QR Code Image</label>
+                      <input type="file" accept="image/*" onChange={(e) => setQrFile(e.target.files[0])} />
+                      {(depositMethodForm.qr_image_url || qrFile) && (
+                        <div style={{ marginTop: '8px' }}>
+                          <img src={qrFile ? URL.createObjectURL(qrFile) : depositMethodForm.qr_image_url} alt="QR Code" style={{ width: '120px', height: '120px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                          {depositMethodForm.qr_image_url && <button type="button" className="admin-btn admin-btn-ghost" style={{ marginTop: '4px', fontSize: '12px' }} onClick={() => setDepositMethodForm({...depositMethodForm, qr_image_url: ''})}>Remove QR</button>}
+                        </div>
+                      )}
+                      <small className="admin-field-help">Upload a QR code image for the client to scan</small>
+                    </div>
+                  </>
                 )}
 
                 <div className="admin-form-field admin-form-full"><label>Instructions</label>

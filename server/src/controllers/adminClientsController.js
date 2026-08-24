@@ -775,16 +775,16 @@ const getClientDepositMethods = async (req, res) => {
 const createClientDepositMethod = async (req, res) => {
   try {
     const { id } = req.params;
-    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, crypto_type, wallet_address, qr_image_url } = req.body;
 
     if (!method_name || !method_type) {
       return res.status(400).json({ error: 'Method name and type are required' });
     }
 
     const result = await pool.query(
-      `INSERT INTO client_deposit_methods (client_id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
-      [id, method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, bank_name || null, account_number || null, routing_number || null, payment_address || null, nearest_branch_map_link || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1]
+      `INSERT INTO client_deposit_methods (client_id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, crypto_type, wallet_address, qr_image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
+      [id, method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, bank_name || null, account_number || null, routing_number || null, payment_address || null, nearest_branch_map_link || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, crypto_type || null, wallet_address || null, qr_image_url || null]
     );
 
     res.status(201).json(result.rows[0]);
@@ -797,7 +797,7 @@ const createClientDepositMethod = async (req, res) => {
 const updateClientDepositMethod = async (req, res) => {
   try {
     const { id, methodId } = req.params;
-    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, sort_order } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, sort_order, crypto_type, wallet_address, qr_image_url } = req.body;
 
     const setClauses = [];
     const params = [];
@@ -816,6 +816,9 @@ const updateClientDepositMethod = async (req, res) => {
     if (additional_notes !== undefined) { setClauses.push(`additional_notes = $${paramIndex}`); params.push(additional_notes); paramIndex++; }
     if (is_active !== undefined) { setClauses.push(`is_active = $${paramIndex}`); params.push(is_active ? 1 : 0); paramIndex++; }
     if (sort_order !== undefined) { setClauses.push(`sort_order = $${paramIndex}`); params.push(sort_order); paramIndex++; }
+    if (crypto_type !== undefined) { setClauses.push(`crypto_type = $${paramIndex}`); params.push(crypto_type); paramIndex++; }
+    if (wallet_address !== undefined) { setClauses.push(`wallet_address = $${paramIndex}`); params.push(wallet_address); paramIndex++; }
+    if (qr_image_url !== undefined) { setClauses.push(`qr_image_url = $${paramIndex}`); params.push(qr_image_url); paramIndex++; }
 
     if (setClauses.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
