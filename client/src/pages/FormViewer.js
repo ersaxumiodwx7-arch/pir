@@ -522,7 +522,7 @@ const FormViewer = () => {
   if (submitted) {
     const successStyle = {
       backgroundColor: form.background_color || '#ffffff',
-      backgroundImage: form.background_image ? `url(http://localhost:5000${form.background_image})` : 'none',
+      backgroundImage: form.background_image ? `url(${form.background_image})` : 'none',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -539,7 +539,7 @@ const FormViewer = () => {
           )}
           {form.logo_url && (
             <img
-              src={`http://localhost:5000${form.logo_url}`}
+              src={form.logo_url}
               alt="Logo"
               className="form-logo"
             />
@@ -551,7 +551,7 @@ const FormViewer = () => {
 
   const formViewerStyle = {
     backgroundColor: form.background_color || '#ffffff',
-    backgroundImage: form.background_image ? `url(http://localhost:5000${form.background_image})` : 'none',
+    backgroundImage: form.background_image ? `url(${form.background_image})` : 'none',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
@@ -571,7 +571,7 @@ const FormViewer = () => {
       <div className="form-viewer" style={formViewerStyle}>
         {form.logo_url && (
           <img
-            src={`http://localhost:5000${form.logo_url}`}
+            src={form.logo_url}
             alt="Logo"
             className="form-logo"
           />

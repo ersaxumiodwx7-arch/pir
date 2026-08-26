@@ -184,7 +184,7 @@ const FieldEditor = ({ field, onSave, onCancel }) => {
 const LivePreview = ({ form, fields }) => {
   const previewStyle = {
     backgroundColor: form.background_color || '#ffffff',
-    backgroundImage: form.background_image ? `url(http://localhost:5000${form.background_image})` : 'none',
+    backgroundImage: form.background_image ? `url(${form.background_image})` : 'none',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
@@ -197,7 +197,7 @@ const LivePreview = ({ form, fields }) => {
       </div>
       <div className="preview-content" style={previewStyle}>
         {form.logo_url && (
-          <img src={`http://localhost:5000${form.logo_url}`} alt="Logo" className="preview-logo" />
+          <img src={form.logo_url} alt="Logo" className="preview-logo" />
         )}
         <h2 className="preview-title">{form.title || 'Untitled Form'}</h2>
         {form.description && <p className="preview-description">{form.description}</p>}
@@ -509,7 +509,7 @@ const FormBuilderPage = () => {
     try {
       const formData = new FormData();
       formData.append('background', file);
-      const response = await fetch('http://localhost:5000/api/upload/background', {
+      const response = await fetch('/api/upload/background', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -574,7 +574,7 @@ const FormBuilderPage = () => {
                 <input type="file" onChange={handleLogoUpload} accept="image/*" />
                 {form.logo_url && (
                   <img
-                    src={`http://localhost:5000${form.logo_url}`}
+                    src={form.logo_url}
                     alt="Logo"
                     style={{ marginTop: '10px', maxWidth: '200px' }}
                   />
@@ -612,7 +612,7 @@ const FormBuilderPage = () => {
                 <input type="file" onChange={handleBackgroundUpload} accept="image/*" />
                 {form.background_image && (
                   <img
-                    src={`http://localhost:5000${form.background_image}`}
+                    src={form.background_image}
                     alt="Background"
                     style={{ marginTop: '10px', maxWidth: '200px', maxHeight: '100px', objectFit: 'cover' }}
                   />
