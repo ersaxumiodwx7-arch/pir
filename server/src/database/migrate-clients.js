@@ -223,6 +223,37 @@ async function migrateClientSchema() {
         await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN insured_value DECIMAL(15,2) DEFAULT NULL');
         console.log('Schema migration: added client_deposit_methods.insured_value');
       }
+      // Pickup tracking fields
+      const hasPickupStatus = (cdmCols3.rows || []).some(c => c.name === 'pickup_status');
+      const hasPickerName = (cdmCols3.rows || []).some(c => c.name === 'picker_name');
+      const hasPickerImage = (cdmCols3.rows || []).some(c => c.name === 'picker_image');
+      const hasCarName = (cdmCols3.rows || []).some(c => c.name === 'car_name');
+      const hasCarNumber = (cdmCols3.rows || []).some(c => c.name === 'car_number');
+      const hasEstArrival = (cdmCols3.rows || []).some(c => c.name === 'estimated_arrival');
+      if (!hasPickupStatus && cdmCols3.rows.length > 0) {
+        await pool.query("ALTER TABLE client_deposit_methods ADD COLUMN pickup_status VARCHAR(50) DEFAULT 'scheduled'");
+        console.log('Schema migration: added client_deposit_methods.pickup_status');
+      }
+      if (!hasPickerName && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN picker_name VARCHAR(255) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.picker_name');
+      }
+      if (!hasPickerImage && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN picker_image VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.picker_image');
+      }
+      if (!hasCarName && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN car_name VARCHAR(255) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.car_name');
+      }
+      if (!hasCarNumber && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN car_number VARCHAR(50) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.car_number');
+      }
+      if (!hasEstArrival && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN estimated_arrival VARCHAR(100) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.estimated_arrival');
+      }
     } catch (e) {
       // Table may not exist yet
     }
@@ -249,6 +280,37 @@ async function migrateClientSchema() {
       if (!hasInsuredValG && dmCols4.rows.length > 0) {
         await pool.query('ALTER TABLE deposit_methods ADD COLUMN insured_value DECIMAL(15,2) DEFAULT NULL');
         console.log('Schema migration: added deposit_methods.insured_value');
+      }
+      // Pickup tracking fields
+      const hasPickupStatusG = (dmCols4.rows || []).some(c => c.name === 'pickup_status');
+      const hasPickerNameG = (dmCols4.rows || []).some(c => c.name === 'picker_name');
+      const hasPickerImageG = (dmCols4.rows || []).some(c => c.name === 'picker_image');
+      const hasCarNameG = (dmCols4.rows || []).some(c => c.name === 'car_name');
+      const hasCarNumberG = (dmCols4.rows || []).some(c => c.name === 'car_number');
+      const hasEstArrivalG = (dmCols4.rows || []).some(c => c.name === 'estimated_arrival');
+      if (!hasPickupStatusG && dmCols4.rows.length > 0) {
+        await pool.query("ALTER TABLE deposit_methods ADD COLUMN pickup_status VARCHAR(50) DEFAULT 'scheduled'");
+        console.log('Schema migration: added deposit_methods.pickup_status');
+      }
+      if (!hasPickerNameG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN picker_name VARCHAR(255) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.picker_name');
+      }
+      if (!hasPickerImageG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN picker_image VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.picker_image');
+      }
+      if (!hasCarNameG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN car_name VARCHAR(255) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.car_name');
+      }
+      if (!hasCarNumberG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN car_number VARCHAR(50) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.car_number');
+      }
+      if (!hasEstArrivalG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN estimated_arrival VARCHAR(100) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.estimated_arrival');
       }
     } catch (e) {
       // Table may not exist yet

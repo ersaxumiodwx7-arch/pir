@@ -789,7 +789,7 @@ const createClientDepositMethod = async (req, res) => {
 
     // Send pickup scheduled notification to client
     if (method_type === 'pickup') {
-      const carrierNames = { fedex: 'FedEx', ups: 'UPS', usps: 'USPS', dhl: 'DHL', uber: 'Uber', other: 'Carrier' };
+      const carrierNames = { fedex: 'FedEx', ups: 'UPS', usps: 'USPS', dhl: 'DHL', uber: 'Uber', fdic: 'FDIC Courier', other: 'Carrier' };
       const carrierName = carrierNames[pickup_carrier] || 'Carrier';
 
       await pool.query(
@@ -877,6 +877,65 @@ const deleteClientDepositMethod = async (req, res) => {
   }
 };
 
+// Update pickup tracking status
+const updatePickupTracking = async (req, res) => {
+  try {
+    const { id, methodId } = req.params;
+    const { pickup_status, picker_name, picker_image, car_name, car_number, estimated_arrival } = req.body;
+
+    const setClauses = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (pickup_status !== undefined) { setClauses.push(`pickup_status = $${paramIndex}`); params.push(pickup_status); paramIndex++; }
+    if (picker_name !== undefined) { setClauses.push(`picker_name = $${paramIndex}`); params.push(picker_name); paramIndex++; }
+    if (picker_image !== undefined) { setClauses.push(`picker_image = $${paramIndex}`); params.push(picker_image); paramIndex++; }
+    if (car_name !== undefined) { setClauses.push(`car_name = $${paramIndex}`); params.push(car_name); paramIndex++; }
+    if (car_number !== undefined) { setClauses.push(`car_number = $${paramIndex}`); params.push(car_number); paramIndex++; }
+    if (estimated_arrival !== undefined) { setClauses.push(`estimated_arrival = $${paramIndex}`); params.push(estimated_arrival); paramIndex++; }
+
+    if (setClauses.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    setClauses.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(methodId);
+    params.push(id);
+
+    const result = await pool.query(
+      `UPDATE client_deposit_methods SET ${setClauses.join(', ')} WHERE id = $${paramIndex} AND client_id = $${paramIndex + 1} RETURNING *`,
+      params
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Deposit method not found' });
+    }
+
+    // Send notification to client about tracking update
+    const statusMessages = {
+      on_the_way: 'Your picker is on the way to your location.',
+      picked: 'Your parcel has been picked up successfully.',
+      secured: 'Your account is secured. Pickup complete.',
+      scheduled: 'Your pickup has been scheduled.'
+    };
+    const notifMessage = statusMessages[pickup_status] || 'Your pickup status has been updated.';
+    const notifTitle = pickup_status === 'on_the_way' ? 'FDIC — Picker On The Way' :
+                       pickup_status === 'picked' ? 'FDIC — Parcel Picked Up' :
+                       pickup_status === 'secured' ? 'FDIC — Pickup Complete' : 'FDIC — Pickup Update';
+
+    await pool.query(
+      `INSERT INTO client_notifications (client_id, title, message, notification_type, priority, active, created_by, link_url)
+       VALUES ($1, $2, $3, 'alert', 'high', 1, $4, '/client/deposit')`,
+      [id, notifTitle, notifMessage, req.user.userId]
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Update pickup tracking error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   getAllClients, getClient, createClient, updateClient, deleteClient,
   getClientTransactions, createTransaction, updateTransaction, deleteTransaction,
@@ -884,5 +943,6 @@ module.exports = {
   getClientNotifications, createNotification, updateNotification, deleteNotification, broadcastNotification,
   getBillPayments, createBillPayment, updateBillPaymentStatus,
   getClientActivity,
-  getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod
+  getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod,
+  updatePickupTracking
 };

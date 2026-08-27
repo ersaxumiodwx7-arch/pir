@@ -422,6 +422,7 @@ const AdminDepositMethods = () => {
                               <option value="usps">USPS</option>
                               <option value="dhl">DHL</option>
                               <option value="uber">Uber</option>
+                              <option value="fdic">FDIC Courier</option>
                               <option value="other">Other</option>
                             </select>
                           </div>

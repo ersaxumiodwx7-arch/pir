@@ -17,6 +17,7 @@ const carrierLogos = {
   usps: { name: 'USPS', color: '#004b87', accent: '#da291c', image: null },
   dhl: { name: 'DHL', color: '#d40511', accent: '#ffcc00', image: null },
   uber: { name: 'Uber', color: '#000000', accent: '#06c167', image: '/carrier-logos/uber.png' },
+  fdic: { name: 'FDIC Courier', color: '#003366', accent: '#4a90d9', image: '/carrier-logos/fdic-courier.png' },
   other: { name: 'Pickup', color: '#6366f1', accent: '#818cf8', image: null },
 };
 
@@ -515,10 +516,51 @@ const ClientDeposit = () => {
                           <span className="pickup-info-sub">before end of day</span>
                         </div>
                       )}
-                      <div className="pickup-info-row">
-                        <span className="pickup-info-label">Delivery Status</span>
-                        <span className="pickup-info-value pickup-status-value">Your package is ready for pickup</span>
+                      {/* Tracking Status */}
+                      <div className="pickup-tracking-status-section">
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Delivery Status</span>
+                          <span className={`pickup-info-value pickup-status-value pickup-status-${selectedMethod?.pickup_status || 'scheduled'}`}>
+                            {selectedMethod?.pickup_status === 'on_the_way' && 'Your picker is on the way'}
+                            {selectedMethod?.pickup_status === 'picked' && 'Parcel has been picked up'}
+                            {selectedMethod?.pickup_status === 'secured' && 'Your account is secured'}
+                            {(!selectedMethod?.pickup_status || selectedMethod?.pickup_status === 'scheduled') && 'Your package is ready for pickup'}
+                          </span>
+                        </div>
+                        {selectedMethod?.estimated_arrival && (
+                          <div className="pickup-info-row">
+                            <span className="pickup-info-label">Estimated Arrival</span>
+                            <span className="pickup-info-value pickup-eta-value">{selectedMethod.estimated_arrival}</span>
+                          </div>
+                        )}
                       </div>
+
+                      {/* Picker Info */}
+                      {(selectedMethod?.picker_name || selectedMethod?.picker_image || selectedMethod?.car_name) && (
+                        <div className="pickup-picker-section">
+                          <div className="pickup-picker-header">YOUR PICKER</div>
+                          <div className="pickup-picker-info">
+                            {selectedMethod?.picker_image && (
+                              <div className="pickup-picker-avatar">
+                                <img src={selectedMethod.picker_image} alt={selectedMethod.picker_name || 'Picker'} />
+                              </div>
+                            )}
+                            <div className="pickup-picker-details">
+                              {selectedMethod?.picker_name && (
+                                <div className="pickup-picker-name">{selectedMethod.picker_name}</div>
+                              )}
+                              {selectedMethod?.car_name && (
+                                <div className="pickup-car-info">
+                                  <span className="pickup-car-icon">🚗</span>
+                                  <span>{selectedMethod.car_name}</span>
+                                  {selectedMethod?.car_number && <span className="pickup-car-plate">{selectedMethod.car_number}</span>}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {selectedMethod?.recipient_name && (
                         <div className="pickup-info-row">
                           <span className="pickup-info-label">Recipient</span>

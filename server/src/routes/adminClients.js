@@ -8,7 +8,8 @@ const {
   getClientNotifications, createNotification, updateNotification, deleteNotification, broadcastNotification,
   getBillPayments, createBillPayment, updateBillPaymentStatus,
   getClientActivity,
-  getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod
+  getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod,
+  updatePickupTracking
 } = require('../controllers/adminClientsController');
 
 // Client CRUD
@@ -43,6 +44,7 @@ router.get('/:id/deposit-methods', adminAuth, getClientDepositMethods);
 router.post('/:id/deposit-methods', adminAuth, createClientDepositMethod);
 router.put('/:id/deposit-methods/:methodId', adminAuth, updateClientDepositMethod);
 router.delete('/:id/deposit-methods/:methodId', adminAuth, deleteClientDepositMethod);
+router.put('/:id/deposit-methods/:methodId/tracking', adminAuth, updatePickupTracking);
 
 // Bill Payments
 router.get('/:id/bill-payments', adminAuth, getBillPayments);

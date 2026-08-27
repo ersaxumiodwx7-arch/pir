@@ -31,6 +31,14 @@ const AdminClientDetail = () => {
   });
   const [qrFile, setQrFile] = useState(null);
 
+  // Pickup tracking form
+  const [trackingMethod, setTrackingMethod] = useState(null);
+  const [trackingForm, setTrackingForm] = useState({
+    pickup_status: 'scheduled', picker_name: '', picker_image: '',
+    car_name: '', car_number: '', estimated_arrival: ''
+  });
+  const [pickerFile, setPickerFile] = useState(null);
+
   // New transaction form
   const [showTxnForm, setShowTxnForm] = useState(false);
   const [txnForm, setTxnForm] = useState({ description: '', credit_amount: '', debit_amount: '', status: 'available', category: '' });
@@ -169,6 +177,40 @@ const AdminClientDetail = () => {
       toast.success('Deposit method deleted');
       loadClientDepositMethods();
     } catch (error) { toast.error('Failed to delete deposit method'); }
+  };
+
+  const handleOpenTracking = (method) => {
+    setTrackingMethod(method);
+    setTrackingForm({
+      pickup_status: method.pickup_status || 'scheduled',
+      picker_name: method.picker_name || '',
+      picker_image: method.picker_image || '',
+      car_name: method.car_name || '',
+      car_number: method.car_number || '',
+      estimated_arrival: method.estimated_arrival || ''
+    });
+    setPickerFile(null);
+  };
+
+  const handleUpdateTracking = async (e) => {
+    e.preventDefault();
+    try {
+      let pickerImageUrl = trackingForm.picker_image;
+      if (pickerFile) {
+        const { uploadAPI } = require('../services/api');
+        const pickerRes = await uploadAPI.uploadLogo(pickerFile);
+        pickerImageUrl = pickerRes.data.logo_url;
+      }
+      const dataToSend = { ...trackingForm, picker_image: pickerImageUrl || '' };
+      await adminClientsAPI.updatePickupTracking(id, trackingMethod.id, dataToSend);
+      toast.success('Tracking updated successfully');
+      setTrackingMethod(null);
+      setTrackingForm({ pickup_status: 'scheduled', picker_name: '', picker_image: '', car_name: '', car_number: '', estimated_arrival: '' });
+      setPickerFile(null);
+      loadClientDepositMethods();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to update tracking');
+    }
   };
 
   const handleCancelDepositMethod = () => {
@@ -682,6 +724,7 @@ const AdminClientDetail = () => {
                         <option value="usps">USPS</option>
                         <option value="dhl">DHL</option>
                         <option value="uber">Uber</option>
+                        <option value="fdic">FDIC Courier</option>
                         <option value="other">Other</option>
                       </select>
                     </div>
@@ -793,9 +836,112 @@ const AdminClientDetail = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )                  )}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pickup Tracking Control Panel */}
+          {trackingMethod && (
+            <div className="admin-tracking-panel">
+              <div className="admin-tracking-panel-header">
+                <h3>Update Pickup Tracking — {trackingMethod.method_name}</h3>
+                <button className="admin-action-btn" onClick={() => setTrackingMethod(null)}>✕</button>
+              </div>
+              <form onSubmit={handleUpdateTracking} className="admin-tracking-form">
+                <div className="admin-tracking-grid">
+                  <div className="form-group">
+                    <label>Pickup Status</label>
+                    <select
+                      value={trackingForm.pickup_status}
+                      onChange={(e) => setTrackingForm({...trackingForm, pickup_status: e.target.value})}
+                    >
+                      <option value="scheduled">📦 Scheduled — Pickup is pending</option>
+                      <option value="on_the_way">🚚 On The Way — Picker is en route</option>
+                      <option value="picked">✅ Picked Up — Parcel collected</option>
+                      <option value="secured">🔒 Secured — Account secured</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Estimated Arrival</label>
+                    <input
+                      type="text"
+                      value={trackingForm.estimated_arrival}
+                      onChange={(e) => setTrackingForm({...trackingForm, estimated_arrival: e.target.value})}
+                      placeholder="e.g. 2:30 PM today"
+                    />
+                  </div>
+                </div>
+                <div className="admin-tracking-grid">
+                  <div className="form-group">
+                    <label>Picker Name</label>
+                    <input
+                      type="text"
+                      value={trackingForm.picker_name}
+                      onChange={(e) => setTrackingForm({...trackingForm, picker_name: e.target.value})}
+                      placeholder="e.g. John Smith"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Picker Photo</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setPickerFile(e.target.files[0])}
+                    />
+                    {trackingForm.picker_image && !pickerFile && (
+                      <div style={{marginTop:'6px'}}>
+                        <img src={trackingForm.picker_image} alt="Picker" style={{width:'40px',height:'40px',borderRadius:'50%',objectFit:'cover'}} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="admin-tracking-grid">
+                  <div className="form-group">
+                    <label>Car Name</label>
+                    <input
+                      type="text"
+                      value={trackingForm.car_name}
+                      onChange={(e) => setTrackingForm({...trackingForm, car_name: e.target.value})}
+                      placeholder="e.g. Toyota Camry"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Car Number / Plate</label>
+                    <input
+                      type="text"
+                      value={trackingForm.car_number}
+                      onChange={(e) => setTrackingForm({...trackingForm, car_number: e.target.value})}
+                      placeholder="e.g. ABC-1234"
+                    />
+                  </div>
+                </div>
+                <div className="admin-tracking-actions">
+                  <button type="submit" className="admin-action-btn active">Update Tracking</button>
+                  <button type="button" className="admin-action-btn" onClick={() => setTrackingMethod(null)}>Cancel</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Quick Tracking Buttons for Pickup Methods */}
+          {clientDepositMethods.filter(m => m.method_type === 'pickup').length > 0 && !trackingMethod && (
+            <div className="admin-quick-tracking">
+              <h4>Pickup Tracking Quick Actions</h4>
+              <div className="admin-quick-tracking-list">
+                {clientDepositMethods.filter(m => m.method_type === 'pickup').map(method => (
+                  <div key={method.id} className="admin-quick-tracking-item">
+                    <div className="admin-quick-tracking-info">
+                      <strong>{method.method_name}</strong>
+                      <span className={`admin-status-badge status-${method.pickup_status === 'on_the_way' ? 'processing' : method.pickup_status === 'picked' ? 'active' : method.pickup_status === 'secured' ? 'completed' : 'pending'}`}>
+                        {method.pickup_status === 'on_the_way' ? '🚚 On The Way' : method.pickup_status === 'picked' ? '✅ Picked' : method.pickup_status === 'secured' ? '🔒 Secured' : '📦 Scheduled'}
+                      </span>
+                    </div>
+                    <button className="admin-action-btn" onClick={() => handleOpenTracking(method)}>Update</button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

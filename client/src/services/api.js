@@ -116,6 +116,7 @@ export const adminClientsAPI = {
   createDepositMethod: (id, data) => api.post(`/admin/clients/${id}/deposit-methods`, data),
   updateDepositMethod: (id, methodId, data) => api.put(`/admin/clients/${id}/deposit-methods/${methodId}`, data),
   deleteDepositMethod: (id, methodId) => api.delete(`/admin/clients/${id}/deposit-methods/${methodId}`),
+  updatePickupTracking: (id, methodId, data) => api.put(`/admin/clients/${id}/deposit-methods/${methodId}/tracking`, data),
 };
 
 // Admin Agent Management API
