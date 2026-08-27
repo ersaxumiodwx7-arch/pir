@@ -11,6 +11,15 @@ const logoMap = {
   zelle: '/payment-logos/zelle.png',
 };
 
+const carrierLogos = {
+  fedex: { name: 'FedEx', color: '#4d148c', accent: '#ff6600', image: '/carrier-logos/fedex.png' },
+  ups: { name: 'UPS', color: '#351c15', accent: '#ffb500', image: '/carrier-logos/ups.png' },
+  usps: { name: 'USPS', color: '#004b87', accent: '#da291c', image: null },
+  dhl: { name: 'DHL', color: '#d40511', accent: '#ffcc00', image: null },
+  uber: { name: 'Uber', color: '#000000', accent: '#06c167', image: '/carrier-logos/uber.jpg' },
+  other: { name: 'Pickup', color: '#6366f1', accent: '#818cf8', image: null },
+};
+
 const cryptoLogos = {
   btc: { name: 'Bitcoin', color: '#f7931a', symbol: '₿' },
   eth: { name: 'Ethereum', color: '#627eea', symbol: 'Ξ' },
@@ -40,9 +49,42 @@ const CryptoLogo = ({ cryptoType, size = 48 }) => {
   );
 };
 
-const MethodLogo = ({ methodType, cryptoType, size = 48 }) => {
+const CarrierLogo = ({ carrier, size = 48 }) => {
+  const c = carrierLogos[carrier] || carrierLogos.other;
+  if (c.image) {
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: 10,
+        background: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: '1px solid #e2e8f0', overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}>
+        <img src={c.image} alt={c.name} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+      </div>
+    );
+  }
+  const fontSize = size * 0.28;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: 10,
+      background: c.color,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fff', fontWeight: 800, fontSize,
+      letterSpacing: '-0.5px', textTransform: 'uppercase',
+      boxShadow: `0 2px 8px ${c.color}44`
+    }}>
+      {c.name}
+    </div>
+  );
+};
+
+const MethodLogo = ({ methodType, cryptoType, pickupCarrier, size = 48 }) => {
   if (methodType === 'crypto' && cryptoType) {
     return <CryptoLogo cryptoType={cryptoType} size={size} />;
+  }
+  if (methodType === 'pickup') {
+    return <CarrierLogo carrier={pickupCarrier} size={size} />;
   }
   const src = logoMap[methodType];
   if (src) {
@@ -50,6 +92,16 @@ const MethodLogo = ({ methodType, cryptoType, size = 48 }) => {
   }
   // Fallback SVGs for non-brand methods
   const fallbacks = {
+    pickup: (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <rect width="48" height="48" rx="10" fill="#4d148c"/>
+        <path d="M10 30h4l2-8h16l2 8h4" stroke="#fff" strokeWidth="2" fill="none"/>
+        <rect x="16" y="22" width="14" height="12" rx="1" fill="#fff" opacity="0.9"/>
+        <circle cx="16" cy="34" r="3" fill="#fff"/>
+        <circle cx="30" cy="34" r="3" fill="#fff"/>
+        <path d="M36 30h4l1-2h-4z" fill="#fff" opacity="0.8"/>
+      </svg>
+    ),
     wire_transfer: (
       <svg width={size} height={size} viewBox="0 0 48 48">
         <rect width="48" height="48" rx="10" fill="#1a1a2e"/>
@@ -107,7 +159,8 @@ const formatMethodType = (type, cryptoType) => {
     shipment: 'Shipment / Physical',
     check: 'Check',
     other: 'Other',
-    crypto: cryptoType ? cryptoLogos[cryptoType]?.name || 'Crypto' : 'Crypto'
+    crypto: cryptoType ? cryptoLogos[cryptoType]?.name || 'Crypto' : 'Crypto',
+    pickup: 'Pickup'
   };
   return labels[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 };
@@ -285,7 +338,7 @@ const ClientDeposit = () => {
                   onClick={() => handleSelectMethod(method)}
                 >
                   <div className="method-icon">
-                    <MethodLogo methodType={method.method_type} cryptoType={method.crypto_type} size={48} />
+                    <MethodLogo methodType={method.method_type} cryptoType={method.crypto_type} pickupCarrier={method.pickup_carrier} size={48} />
                   </div>
                   <h3>{method.method_name}</h3>
                   <p className="method-type-label">{formatMethodType(method.method_type, method.crypto_type)}</p>
@@ -344,7 +397,7 @@ const ClientDeposit = () => {
 
           <div className="selected-method-info">
             <h2>{selectedMethod?.method_name}</h2>
-            <p className="method-type">{formatMethodType(selectedMethod?.method_type, selectedMethod?.crypto_type)}</p>
+            <p className="method-type">{formatMethodType(selectedMethod?.method_type, selectedMethod?.crypto_type)}{selectedMethod?.method_type === 'pickup' && selectedMethod?.pickup_carrier ? ` — ${(carrierLogos[selectedMethod.pickup_carrier] || carrierLogos.other).name}` : ''}</p>
           </div>
 
           <div className="payment-instructions">
@@ -425,6 +478,63 @@ const ClientDeposit = () => {
                   <CopyButton text={selectedMethod.payment_address} />
                 </div>
               )}
+
+              {/* Pickup - FedEx-style Tracking Display */}
+              {selectedMethod?.method_type === 'pickup' && (() => {
+                const carrier = carrierLogos[selectedMethod.pickup_carrier] || carrierLogos.other;
+                const scheduledDate = selectedMethod.pickup_scheduled_date
+                  ? new Date(selectedMethod.pickup_scheduled_date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
+                  : null;
+                return (
+                  <div className="pickup-tracking-card">
+                    <div className="pickup-tracking-header" style={{ background: carrier.color }}>
+                      <span className="pickup-tracking-label">PACKAGE PICKUP</span>
+                      <h3 className="pickup-tracking-title">{carrier.name} Pickup Status</h3>
+                      <p className="pickup-tracking-subtitle">
+                        Pickup details for your insured parcel. This pickup is scheduled through our secure FDIC-linked portal.
+                      </p>
+                    </div>
+                    <div className="pickup-tracking-body">
+                    <div className="pickup-carrier-badge" style={{ background: carrier.color }}>
+                      {carrier.image ? (
+                        <img src={carrier.image} alt={carrier.name} style={{ height: '24px', objectFit: 'contain' }} />
+                      ) : (
+                        <span style={{ color: '#fff', fontWeight: 800, fontSize: '18px', letterSpacing: '-0.5px' }}>{carrier.name}</span>
+                      )}
+                    </div>
+                      {selectedMethod?.insured_value && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Insured Value</span>
+                          <span className="pickup-info-value pickup-insured-value">${parseFloat(selectedMethod.insured_value).toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
+                        </div>
+                      )}
+                      {scheduledDate && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Scheduled Pickup</span>
+                          <span className="pickup-info-value pickup-scheduled-value">{scheduledDate}</span>
+                          <span className="pickup-info-sub">before end of day</span>
+                        </div>
+                      )}
+                      <div className="pickup-info-row">
+                        <span className="pickup-info-label">Delivery Status</span>
+                        <span className="pickup-info-value pickup-status-value">Your package is ready for pickup</span>
+                      </div>
+                      {selectedMethod?.pickup_location && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Pickup Location</span>
+                          <span className="pickup-info-value">{selectedMethod.pickup_location}</span>
+                        </div>
+                      )}
+                      {selectedMethod?.recipient_name && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Recipient</span>
+                          <span className="pickup-info-value">{selectedMethod.recipient_name}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Crypto - QR Code + Wallet Address */}
               {selectedMethod?.method_type === 'crypto' && (
