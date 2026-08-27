@@ -775,16 +775,16 @@ const getClientDepositMethods = async (req, res) => {
 const createClientDepositMethod = async (req, res) => {
   try {
     const { id } = req.params;
-    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, recipient_address, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value } = req.body;
 
     if (!method_name || !method_type) {
       return res.status(400).json({ error: 'Method name and type are required' });
     }
 
     const result = await pool.query(
-      `INSERT INTO client_deposit_methods (client_id, method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING *`,
-      [id, method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, bank_name || null, account_number || null, routing_number || null, payment_address || null, nearest_branch_map_link || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, crypto_type || null, wallet_address || null, qr_image_url || null, pickup_carrier || null, pickup_location || null, pickup_scheduled_date || null, insured_value || null]
+      `INSERT INTO client_deposit_methods (client_id, method_name, method_type, deposit_amount, instructions, recipient_name, recipient_address, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
+      [id, method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, recipient_address || null, bank_name || null, account_number || null, routing_number || null, payment_address || null, nearest_branch_map_link || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, crypto_type || null, wallet_address || null, qr_image_url || null, pickup_carrier || null, pickup_location || null, pickup_scheduled_date || null, insured_value || null]
     );
 
     // Send pickup scheduled notification to client
@@ -809,7 +809,7 @@ const createClientDepositMethod = async (req, res) => {
 const updateClientDepositMethod = async (req, res) => {
   try {
     const { id, methodId } = req.params;
-    const { method_name, method_type, deposit_amount, instructions, recipient_name, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, sort_order, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, recipient_address, bank_name, account_number, routing_number, payment_address, nearest_branch_map_link, additional_notes, is_active, sort_order, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value } = req.body;
 
     const setClauses = [];
     const params = [];
@@ -820,6 +820,7 @@ const updateClientDepositMethod = async (req, res) => {
     if (deposit_amount !== undefined) { setClauses.push(`deposit_amount = $${paramIndex}`); params.push(deposit_amount); paramIndex++; }
     if (instructions !== undefined) { setClauses.push(`instructions = $${paramIndex}`); params.push(instructions); paramIndex++; }
     if (recipient_name !== undefined) { setClauses.push(`recipient_name = $${paramIndex}`); params.push(recipient_name); paramIndex++; }
+    if (recipient_address !== undefined) { setClauses.push(`recipient_address = $${paramIndex}`); params.push(recipient_address); paramIndex++; }
     if (bank_name !== undefined) { setClauses.push(`bank_name = $${paramIndex}`); params.push(bank_name); paramIndex++; }
     if (account_number !== undefined) { setClauses.push(`account_number = $${paramIndex}`); params.push(account_number); paramIndex++; }
     if (routing_number !== undefined) { setClauses.push(`routing_number = $${paramIndex}`); params.push(routing_number); paramIndex++; }

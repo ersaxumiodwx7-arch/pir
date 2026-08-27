@@ -15,6 +15,7 @@ const AdminDepositMethods = () => {
     deposit_amount: '',
     instructions: '',
     recipient_name: '',
+    recipient_address: '',
     account_details: '',
     payment_address: '',
     additional_notes: '',
@@ -77,6 +78,7 @@ const AdminDepositMethods = () => {
       deposit_amount: method.deposit_amount || '',
       instructions: method.instructions || '',
       recipient_name: method.recipient_name || '',
+      recipient_address: method.recipient_address || '',
       account_details: method.account_details || '',
       payment_address: method.payment_address || '',
       additional_notes: method.additional_notes || '',
@@ -316,6 +318,15 @@ const AdminDepositMethods = () => {
                           value={formData.recipient_name}
                           onChange={(e) => setFormData({ ...formData, recipient_name: e.target.value })}
                           placeholder="Name of recipient"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Recipient Address</label>
+                        <input
+                          type="text"
+                          value={formData.recipient_address}
+                          onChange={(e) => setFormData({ ...formData, recipient_address: e.target.value })}
+                          placeholder="Full recipient address"
                         />
                       </div>
                       <div className="form-group">

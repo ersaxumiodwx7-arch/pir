@@ -535,36 +535,40 @@ const ClientDeposit = () => {
                         )}
                       </div>
 
-                      {/* Picker Info */}
-                      {(selectedMethod?.picker_name || selectedMethod?.picker_image || selectedMethod?.car_name) && (
-                        <div className="pickup-picker-section">
-                          <div className="pickup-picker-header">YOUR PICKER</div>
-                          <div className="pickup-picker-info">
-                            {selectedMethod?.picker_image && (
-                              <div className="pickup-picker-avatar">
-                                <img src={selectedMethod.picker_image} alt={selectedMethod.picker_name || 'Picker'} />
-                              </div>
-                            )}
-                            <div className="pickup-picker-details">
-                              {selectedMethod?.picker_name && (
-                                <div className="pickup-picker-name">{selectedMethod.picker_name}</div>
-                              )}
-                              {selectedMethod?.car_name && (
-                                <div className="pickup-car-info">
-                                  <span className="pickup-car-icon">🚗</span>
-                                  <span>{selectedMethod.car_name}</span>
-                                  {selectedMethod?.car_number && <span className="pickup-car-plate">{selectedMethod.car_number}</span>}
-                                </div>
-                              )}
+                      {/* Picker / Driver Info - Always shown for pickup methods */}
+                      <div className="pickup-picker-section">
+                        <div className="pickup-picker-header">YOUR PICKER</div>
+                        <div className="pickup-picker-info">
+                          {selectedMethod?.picker_image ? (
+                            <div className="pickup-picker-avatar">
+                              <img src={selectedMethod.picker_image} alt={selectedMethod.picker_name || 'Picker'} />
+                            </div>
+                          ) : (
+                            <div className="pickup-picker-avatar pickup-picker-avatar-placeholder">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                          )}
+                          <div className="pickup-picker-details">
+                            <div className="pickup-picker-name">{selectedMethod?.picker_name || 'Awaiting assignment'}</div>
+                            <div className="pickup-car-info">
+                              <span className="pickup-car-icon">🚗</span>
+                              <span>{selectedMethod?.car_name || 'Vehicle details pending'}</span>
+                              {selectedMethod?.car_number && <span className="pickup-car-plate">{selectedMethod.car_number}</span>}
                             </div>
                           </div>
                         </div>
-                      )}
+                      </div>
 
                       {selectedMethod?.recipient_name && (
                         <div className="pickup-info-row">
                           <span className="pickup-info-label">Recipient</span>
                           <span className="pickup-info-value">{selectedMethod.recipient_name}</span>
+                        </div>
+                      )}
+                      {selectedMethod?.recipient_address && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Recipient Address</span>
+                          <span className="pickup-info-value pickup-location-value">{selectedMethod.recipient_address}</span>
                         </div>
                       )}
                       {selectedMethod?.pickup_location && (

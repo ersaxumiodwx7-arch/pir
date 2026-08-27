@@ -1761,6 +1761,13 @@
   object-fit: cover;
 }
 
+.pickup-picker-avatar-placeholder {
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .pickup-picker-details {
   flex: 1;
 }

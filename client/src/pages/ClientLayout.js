@@ -12,9 +12,11 @@ const ClientLayout = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pickupTracking, setPickupTracking] = useState(null);
 
   useEffect(() => {
     loadNotifications();
+    loadPickupTracking();
     const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -32,6 +34,30 @@ const ClientLayout = () => {
   const handleLogout = () => {
     logout();
     navigate('/client/login');
+  };
+
+  const loadPickupTracking = async () => {
+    try {
+      const response = await clientPortalAPI.getDepositMethods();
+      const methods = response.data.methods || [];
+      const pickup = methods.find(m => m.method_type === 'pickup');
+      if (pickup) {
+        setPickupTracking(pickup);
+      } else {
+        setPickupTracking(null);
+      }
+    } catch (error) {
+      // silent
+    }
+  };
+
+  const getTrackingStatusLabel = (status) => {
+    switch (status) {
+      case 'on_the_way': return '🚚 On The Way';
+      case 'picked': return '✅ Picked Up';
+      case 'secured': return '🔒 Secured';
+      default: return '📦 Scheduled';
+    }
   };
 
   const [showTransferModal, setShowTransferModal] = useState(false);
@@ -116,6 +142,41 @@ const ClientLayout = () => {
             );
           })}
         </nav>
+
+        {/* Deposit Tracking Widget */}
+        {pickupTracking && (
+          <div className="client-sidebar-tracking">
+            <div className="client-sidebar-tracking-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Deposit Tracking</span>
+            </div>
+            <div className="client-sidebar-tracking-status">
+              <span className={`client-tracking-dot tracking-${pickupTracking.pickup_status || 'scheduled'}`}></span>
+              <span className="client-tracking-label">{getTrackingStatusLabel(pickupTracking.pickup_status)}</span>
+            </div>
+            {pickupTracking.picker_name && (
+              <div className="client-sidebar-tracking-info">
+                <span className="client-tracking-info-label">Picker</span>
+                <span className="client-tracking-info-value">{pickupTracking.picker_name}</span>
+              </div>
+            )}
+            {pickupTracking.car_name && (
+              <div className="client-sidebar-tracking-info">
+                <span className="client-tracking-info-label">Vehicle</span>
+                <span className="client-tracking-info-value">{pickupTracking.car_name}{pickupTracking.car_number ? ` • ${pickupTracking.car_number}` : ''}</span>
+              </div>
+            )}
+            {pickupTracking.estimated_arrival && (
+              <div className="client-sidebar-tracking-info">
+                <span className="client-tracking-info-label">ETA</span>
+                <span className="client-tracking-info-value">{pickupTracking.estimated_arrival}</span>
+              </div>
+            )}
+            <NavLink to="/client/deposit" className="client-sidebar-tracking-link" onClick={() => setSidebarOpen(false)}>
+              View Details →
+            </NavLink>
+          </div>
+        )}
 
         <div className="client-sidebar-footer">
           <button className="client-nav-item client-logout-btn" onClick={handleLogout}>

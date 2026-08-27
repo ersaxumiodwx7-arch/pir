@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS client_deposit_methods (
   pickup_location VARCHAR(500),
   pickup_scheduled_date VARCHAR(50),
   insured_value DECIMAL(15,2),
+  recipient_address VARCHAR(500),
   pickup_status VARCHAR(50) DEFAULT 'scheduled',
   picker_name VARCHAR(255),
   picker_image VARCHAR(500),

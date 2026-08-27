@@ -24,7 +24,7 @@ const AdminClientDetail = () => {
   const [editingDepositMethod, setEditingDepositMethod] = useState(null);
   const [depositMethodForm, setDepositMethodForm] = useState({
     method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '',
-    recipient_name: '', bank_name: '', account_number: '', routing_number: '',
+    recipient_name: '', recipient_address: '', bank_name: '', account_number: '', routing_number: '',
     payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true,
     crypto_type: 'btc', wallet_address: '', qr_image_url: '',
     pickup_carrier: 'fedex', pickup_location: '', pickup_scheduled_date: '', insured_value: ''
@@ -151,6 +151,7 @@ const AdminClientDetail = () => {
       deposit_amount: method.deposit_amount || '',
       instructions: method.instructions || '',
       recipient_name: method.recipient_name || '',
+      recipient_address: method.recipient_address || '',
       bank_name: method.bank_name || '',
       account_number: method.account_number || '',
       routing_number: method.routing_number || '',
@@ -215,7 +216,7 @@ const AdminClientDetail = () => {
 
   const handleCancelDepositMethod = () => {
     setEditingDepositMethod(null);
-    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '', pickup_carrier: 'fedex', pickup_location: '', pickup_scheduled_date: '', insured_value: '' });
+    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', recipient_address: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '', pickup_carrier: 'fedex', pickup_location: '', pickup_scheduled_date: '', insured_value: '' });
     setQrFile(null);
     setShowDepositMethodForm(false);
   };
@@ -681,6 +682,9 @@ const AdminClientDetail = () => {
                 </div>
                 <div className="admin-form-field"><label>Recipient Name</label>
                   <input type="text" value={depositMethodForm.recipient_name} onChange={(e) => setDepositMethodForm({...depositMethodForm, recipient_name: e.target.value})} placeholder="Who to pay" />
+                </div>
+                <div className="admin-form-field"><label>Recipient Address</label>
+                  <input type="text" value={depositMethodForm.recipient_address} onChange={(e) => setDepositMethodForm({...depositMethodForm, recipient_address: e.target.value})} placeholder="Full address for recipient" />
                 </div>
 
                 {/* Wire Transfer fields */}

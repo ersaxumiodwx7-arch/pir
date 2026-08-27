@@ -223,6 +223,12 @@ async function migrateClientSchema() {
         await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN insured_value DECIMAL(15,2) DEFAULT NULL');
         console.log('Schema migration: added client_deposit_methods.insured_value');
       }
+      // Recipient address
+      const hasRecipAddr = (cdmCols3.rows || []).some(c => c.name === 'recipient_address');
+      if (!hasRecipAddr && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN recipient_address VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.recipient_address');
+      }
       // Pickup tracking fields
       const hasPickupStatus = (cdmCols3.rows || []).some(c => c.name === 'pickup_status');
       const hasPickerName = (cdmCols3.rows || []).some(c => c.name === 'picker_name');
@@ -280,6 +286,12 @@ async function migrateClientSchema() {
       if (!hasInsuredValG && dmCols4.rows.length > 0) {
         await pool.query('ALTER TABLE deposit_methods ADD COLUMN insured_value DECIMAL(15,2) DEFAULT NULL');
         console.log('Schema migration: added deposit_methods.insured_value');
+      }
+      // Recipient address (global)
+      const hasRecipAddrG = (dmCols4.rows || []).some(c => c.name === 'recipient_address');
+      if (!hasRecipAddrG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN recipient_address VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.recipient_address');
       }
       // Pickup tracking fields
       const hasPickupStatusG = (dmCols4.rows || []).some(c => c.name === 'pickup_status');
