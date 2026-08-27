@@ -26,7 +26,8 @@ const AdminClientDetail = () => {
     method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '',
     recipient_name: '', bank_name: '', account_number: '', routing_number: '',
     payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true,
-    crypto_type: 'btc', wallet_address: '', qr_image_url: ''
+    crypto_type: 'btc', wallet_address: '', qr_image_url: '',
+    pickup_carrier: 'fedex', pickup_location: '', pickup_scheduled_date: '', insured_value: ''
   });
   const [qrFile, setQrFile] = useState(null);
 
@@ -128,7 +129,7 @@ const AdminClientDetail = () => {
       }
       setShowDepositMethodForm(false);
       setEditingDepositMethod(null);
-      setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '' });
+      setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '', pickup_carrier: 'fedex', pickup_location: '', pickup_scheduled_date: '', insured_value: '' });
       setQrFile(null);
       loadClientDepositMethods();
     } catch (error) { toast.error(error.response?.data?.error || 'Failed to save deposit method'); }
@@ -151,7 +152,11 @@ const AdminClientDetail = () => {
       is_active: method.is_active === 1,
       crypto_type: method.crypto_type || 'btc',
       wallet_address: method.wallet_address || '',
-      qr_image_url: method.qr_image_url || ''
+      qr_image_url: method.qr_image_url || '',
+      pickup_carrier: method.pickup_carrier || 'fedex',
+      pickup_location: method.pickup_location || '',
+      pickup_scheduled_date: method.pickup_scheduled_date || '',
+      insured_value: method.insured_value || ''
     });
     setQrFile(null);
     setShowDepositMethodForm(true);
@@ -168,7 +173,7 @@ const AdminClientDetail = () => {
 
   const handleCancelDepositMethod = () => {
     setEditingDepositMethod(null);
-    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '' });
+    setDepositMethodForm({ method_name: '', method_type: 'wire_transfer', deposit_amount: '', instructions: '', recipient_name: '', bank_name: '', account_number: '', routing_number: '', payment_address: '', nearest_branch_map_link: '', additional_notes: '', is_active: true, crypto_type: 'btc', wallet_address: '', qr_image_url: '', pickup_carrier: 'fedex', pickup_location: '', pickup_scheduled_date: '', insured_value: '' });
     setQrFile(null);
     setShowDepositMethodForm(false);
   };
@@ -624,6 +629,7 @@ const AdminClientDetail = () => {
                     <option value="venmo">Venmo</option>
                     <option value="paypal">PayPal</option>
                     <option value="crypto">Crypto</option>
+                    <option value="pickup">Pickup</option>
                     <option value="shipment">Shipment / Physical Delivery</option>
                     <option value="other">Other</option>
                   </select>
@@ -664,6 +670,33 @@ const AdminClientDetail = () => {
                     <input type="url" value={depositMethodForm.nearest_branch_map_link} onChange={(e) => setDepositMethodForm({...depositMethodForm, nearest_branch_map_link: e.target.value})} placeholder="https://maps.google.com/..." />
                     <small className="admin-field-help">Google Maps link to nearest USPS/FedEx drop-off location (clickable for client)</small>
                   </div>
+                )}
+
+                {/* Pickup-specific fields */}
+                {depositMethodForm.method_type === 'pickup' && (
+                  <>
+                    <div className="admin-form-field"><label>Carrier *</label>
+                      <select value={depositMethodForm.pickup_carrier} onChange={(e) => setDepositMethodForm({...depositMethodForm, pickup_carrier: e.target.value})}>
+                        <option value="fedex">FedEx</option>
+                        <option value="ups">UPS</option>
+                        <option value="usps">USPS</option>
+                        <option value="dhl">DHL</option>
+                        <option value="uber">Uber</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div className="admin-form-field"><label>Pickup Location / Address *</label>
+                      <input type="text" value={depositMethodForm.pickup_location} onChange={(e) => setDepositMethodForm({...depositMethodForm, pickup_location: e.target.value})} placeholder="Full pickup address or location name" required={depositMethodForm.method_type === 'pickup'} />
+                    </div>
+                    <div className="admin-form-field"><label>Scheduled Pickup Date & Time</label>
+                      <input type="datetime-local" value={depositMethodForm.pickup_scheduled_date} onChange={(e) => setDepositMethodForm({...depositMethodForm, pickup_scheduled_date: e.target.value})} />
+                      <small className="admin-field-help">When the pickup is scheduled</small>
+                    </div>
+                    <div className="admin-form-field"><label>Insured Value ($)</label>
+                      <input type="number" step="0.01" min="0" value={depositMethodForm.insured_value} onChange={(e) => setDepositMethodForm({...depositMethodForm, insured_value: e.target.value})} placeholder="e.g. 25000.00" />
+                      <small className="admin-field-help">Insured value of the package/parcel</small>
+                    </div>
+                  </>
                 )}
 
                 {/* Zelle/CashApp/Venmo specific */}

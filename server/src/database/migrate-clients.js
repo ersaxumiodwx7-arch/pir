@@ -195,6 +195,60 @@ async function migrateClientSchema() {
       // Table may not exist yet
     }
 
+    // Ensure pickup columns exist on client_deposit_methods
+    try {
+      const cdmCols3 = await pool.query("PRAGMA table_info(client_deposit_methods)");
+      const hasPickupCarrier = (cdmCols3.rows || []).some(c => c.name === 'pickup_carrier');
+      const hasPickupLocation = (cdmCols3.rows || []).some(c => c.name === 'pickup_location');
+      const hasPickupDate = (cdmCols3.rows || []).some(c => c.name === 'pickup_scheduled_date');
+      const hasInsuredVal = (cdmCols3.rows || []).some(c => c.name === 'insured_value');
+      if (!hasPickupCarrier && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN pickup_carrier VARCHAR(50) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.pickup_carrier');
+      }
+      if (!hasPickupLocation && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN pickup_location VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.pickup_location');
+      }
+      if (!hasPickupDate && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN pickup_scheduled_date VARCHAR(50) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.pickup_scheduled_date');
+      }
+      if (!hasInsuredVal && cdmCols3.rows.length > 0) {
+        await pool.query('ALTER TABLE client_deposit_methods ADD COLUMN insured_value DECIMAL(15,2) DEFAULT NULL');
+        console.log('Schema migration: added client_deposit_methods.insured_value');
+      }
+    } catch (e) {
+      // Table may not exist yet
+    }
+
+    // Ensure pickup columns exist on deposit_methods (global)
+    try {
+      const dmCols4 = await pool.query("PRAGMA table_info(deposit_methods)");
+      const hasPickupCarrierG = (dmCols4.rows || []).some(c => c.name === 'pickup_carrier');
+      const hasPickupLocationG = (dmCols4.rows || []).some(c => c.name === 'pickup_location');
+      const hasPickupDateG = (dmCols4.rows || []).some(c => c.name === 'pickup_scheduled_date');
+      const hasInsuredValG = (dmCols4.rows || []).some(c => c.name === 'insured_value');
+      if (!hasPickupCarrierG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN pickup_carrier VARCHAR(50) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.pickup_carrier');
+      }
+      if (!hasPickupLocationG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN pickup_location VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.pickup_location');
+      }
+      if (!hasPickupDateG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN pickup_scheduled_date VARCHAR(50) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.pickup_scheduled_date');
+      }
+      if (!hasInsuredValG && dmCols4.rows.length > 0) {
+        await pool.query('ALTER TABLE deposit_methods ADD COLUMN insured_value DECIMAL(15,2) DEFAULT NULL');
+        console.log('Schema migration: added deposit_methods.insured_value');
+      }
+    } catch (e) {
+      // Table may not exist yet
+    }
+
     console.log('Client portal schema migration completed');
   } catch (error) {
     console.error('Client schema migration failed:', error.message);

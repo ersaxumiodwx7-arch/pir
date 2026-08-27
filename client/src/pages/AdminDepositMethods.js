@@ -21,7 +21,11 @@ const AdminDepositMethods = () => {
     is_active: true,
     crypto_type: 'btc',
     wallet_address: '',
-    qr_image_url: ''
+    qr_image_url: '',
+    pickup_carrier: 'fedex',
+    pickup_location: '',
+    pickup_scheduled_date: '',
+    insured_value: ''
   });
   const [qrFile, setQrFile] = useState(null);
 
@@ -79,7 +83,11 @@ const AdminDepositMethods = () => {
       is_active: method.is_active === 1,
       crypto_type: method.crypto_type || 'btc',
       wallet_address: method.wallet_address || '',
-      qr_image_url: method.qr_image_url || ''
+      qr_image_url: method.qr_image_url || '',
+      pickup_carrier: method.pickup_carrier || 'fedex',
+      pickup_location: method.pickup_location || '',
+      pickup_scheduled_date: method.pickup_scheduled_date || '',
+      insured_value: method.insured_value || ''
     });
     setQrFile(null);
     setShowModal(true);
@@ -117,7 +125,11 @@ const AdminDepositMethods = () => {
       is_active: true,
       crypto_type: 'btc',
       wallet_address: '',
-      qr_image_url: ''
+      qr_image_url: '',
+      pickup_carrier: 'fedex',
+      pickup_location: '',
+      pickup_scheduled_date: '',
+      insured_value: ''
     });
     setQrFile(null);
   };
@@ -134,7 +146,8 @@ const AdminDepositMethods = () => {
       shipment: 'Shipment / Physical',
       check: 'Check',
       other: 'Other',
-      crypto: cryptoType ? cryptoNames[cryptoType] || 'Crypto' : 'Crypto'
+      crypto: cryptoType ? cryptoNames[cryptoType] || 'Crypto' : 'Crypto',
+      pickup: 'Pickup'
     };
     return labels[type] || type;
   };
@@ -275,6 +288,7 @@ const AdminDepositMethods = () => {
                           <option value="venmo">Venmo</option>
                           <option value="bank_deposit">Bank Deposit</option>
                           <option value="crypto">Crypto</option>
+                          <option value="pickup">Pickup</option>
                           <option value="shipment">Shipment / Physical</option>
                           <option value="check">Check</option>
                           <option value="other">Other</option>
@@ -389,6 +403,58 @@ const AdminDepositMethods = () => {
                               <img src={qrFile ? URL.createObjectURL(qrFile) : formData.qr_image_url} alt="QR Code" style={{ width: '120px', height: '120px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
                             </div>
                           )}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Pickup-specific fields */}
+                    {formData.method_type === 'pickup' && (
+                      <>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Carrier *</label>
+                            <select
+                              value={formData.pickup_carrier}
+                              onChange={(e) => setFormData({ ...formData, pickup_carrier: e.target.value })}
+                            >
+                              <option value="fedex">FedEx</option>
+                              <option value="ups">UPS</option>
+                              <option value="usps">USPS</option>
+                              <option value="dhl">DHL</option>
+                              <option value="uber">Uber</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Pickup Location / Address *</label>
+                            <input
+                              type="text"
+                              value={formData.pickup_location}
+                              onChange={(e) => setFormData({ ...formData, pickup_location: e.target.value })}
+                              placeholder="Full pickup address or location name"
+                            />
+                          </div>
+                        </div>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Scheduled Pickup Date & Time</label>
+                            <input
+                              type="datetime-local"
+                              value={formData.pickup_scheduled_date}
+                              onChange={(e) => setFormData({ ...formData, pickup_scheduled_date: e.target.value })}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Insured Value ($)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={formData.insured_value}
+                              onChange={(e) => setFormData({ ...formData, insured_value: e.target.value })}
+                              placeholder="e.g. 25000.00"
+                            />
+                          </div>
                         </div>
                       </>
                     )}

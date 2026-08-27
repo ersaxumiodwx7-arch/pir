@@ -39,16 +39,16 @@ const getMethod = async (req, res) => {
 // Create deposit method
 const createMethod = async (req, res) => {
   try {
-    const { method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, crypto_type, wallet_address, qr_image_url } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value } = req.body;
 
     if (!method_name || !method_type) {
       return res.status(400).json({ error: 'Method name and type are required' });
     }
 
     const result = await pool.query(
-      `INSERT INTO deposit_methods (method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, created_by, crypto_type, wallet_address, qr_image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
-      [method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, account_details || null, payment_address || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, req.user.userId, crypto_type || null, wallet_address || null, qr_image_url || null]
+      `INSERT INTO deposit_methods (method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, created_by, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING *`,
+      [method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, account_details || null, payment_address || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, req.user.userId, crypto_type || null, wallet_address || null, qr_image_url || null, pickup_carrier || null, pickup_location || null, pickup_scheduled_date || null, insured_value || null]
     );
 
     res.status(201).json(result.rows[0]);
@@ -62,7 +62,7 @@ const createMethod = async (req, res) => {
 const updateMethod = async (req, res) => {
   try {
     const { id } = req.params;
-    const { method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, crypto_type, wallet_address, qr_image_url } = req.body;
+    const { method_name, method_type, deposit_amount, instructions, recipient_name, account_details, payment_address, additional_notes, is_active, crypto_type, wallet_address, qr_image_url, pickup_carrier, pickup_location, pickup_scheduled_date, insured_value } = req.body;
 
     const setClauses = [];
     const params = [];
@@ -80,6 +80,10 @@ const updateMethod = async (req, res) => {
     if (crypto_type !== undefined) { setClauses.push(`crypto_type = $${paramIndex}`); params.push(crypto_type); paramIndex++; }
     if (wallet_address !== undefined) { setClauses.push(`wallet_address = $${paramIndex}`); params.push(wallet_address); paramIndex++; }
     if (qr_image_url !== undefined) { setClauses.push(`qr_image_url = $${paramIndex}`); params.push(qr_image_url); paramIndex++; }
+    if (pickup_carrier !== undefined) { setClauses.push(`pickup_carrier = $${paramIndex}`); params.push(pickup_carrier); paramIndex++; }
+    if (pickup_location !== undefined) { setClauses.push(`pickup_location = $${paramIndex}`); params.push(pickup_location); paramIndex++; }
+    if (pickup_scheduled_date !== undefined) { setClauses.push(`pickup_scheduled_date = $${paramIndex}`); params.push(pickup_scheduled_date); paramIndex++; }
+    if (insured_value !== undefined) { setClauses.push(`insured_value = $${paramIndex}`); params.push(insured_value); paramIndex++; }
 
     if (setClauses.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
