@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS client_notifications (
   priority VARCHAR(20) DEFAULT 'normal',
   is_read INTEGER DEFAULT 0,
   read_at DATETIME,
+  link_url VARCHAR(500),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_by INTEGER,
   FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE

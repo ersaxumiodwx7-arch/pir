@@ -1548,3 +1548,28 @@
   color: #64748b;
   font-style: italic;
 }
+
+/* Clickable notification */
+.client-notif-item.clickable {
+  cursor: pointer;
+}
+
+.client-notif-item.clickable:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.client-notif-item.clickable::after {
+  content: '→';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #94a3b8;
+  transition: color 0.2s;
+}
+
+.client-notif-item.clickable:hover::after {
+  color: #3b82f6;
+}

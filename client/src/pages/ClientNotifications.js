@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { clientPortalAPI } from '../services/api';
 import { CreditCardIcon, FileTextIcon, AlertCircleIcon, SettingsIcon, MessageIcon, CheckCircleIcon } from '../components/Icons';
 import './ClientPages.css';
@@ -6,6 +7,7 @@ import './ClientPages.css';
 const ClientNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => { loadNotifications(); }, []);
 
@@ -101,8 +103,11 @@ const ClientNotifications = () => {
             {notifications.map((notif) => (
               <div
                 key={notif.id}
-                className={`client-notif-item ${!notif.is_read ? 'unread' : ''}`}
-                onClick={() => !notif.is_read && markAsRead(notif.id)}
+                className={`client-notif-item ${!notif.is_read ? 'unread' : ''} ${notif.link_url ? 'clickable' : ''}`}
+                onClick={() => {
+                  if (!notif.is_read) markAsRead(notif.id);
+                  if (notif.link_url) navigate(notif.link_url);
+                }}
               >
                 <div className="client-notif-icon">
                   {getNotifIcon(notif.notification_type, notif.priority)}

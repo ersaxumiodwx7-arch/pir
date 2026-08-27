@@ -1508,6 +1508,82 @@
   color: #2563eb;
 }
 
+/* Pickup Instructions Section */
+.pickup-instructions-section {
+  margin-top: 0;
+}
+
+.pickup-instructions-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0 -28px 20px;
+}
+
+.pickup-instructions-heading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #64748b;
+  margin: 0 0 16px;
+  text-transform: uppercase;
+}
+
+.pickup-instruction-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.pickup-instruction-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+}
+
+.pickup-instruction-icon {
+  flex-shrink: 0;
+  color: #6366f1;
+  margin-top: 2px;
+}
+
+.pickup-instruction-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.pickup-instruction-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.pickup-instructions-note {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.pickup-instructions-note strong {
+  color: #78350f;
+}
+
 @media (max-width: 600px) {
   .pickup-tracking-header {
     padding: 20px 20px 16px;
@@ -1520,5 +1596,11 @@
   }
   .pickup-info-value {
     font-size: 16px;
+  }
+  .pickup-instruction-grid {
+    grid-template-columns: 1fr;
+  }
+  .pickup-instructions-divider {
+    margin: 0 -20px 16px;
   }
 }

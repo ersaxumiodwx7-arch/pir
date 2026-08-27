@@ -42,6 +42,11 @@ async function migrateClientSchema() {
         await pool.query('ALTER TABLE client_notifications ADD COLUMN active INTEGER DEFAULT 1');
         console.log('Schema migration: added client_notifications.active');
       }
+      const hasLinkUrl = (cols.rows || []).some(c => c.name === 'link_url');
+      if (!hasLinkUrl) {
+        await pool.query('ALTER TABLE client_notifications ADD COLUMN link_url VARCHAR(500) DEFAULT NULL');
+        console.log('Schema migration: added client_notifications.link_url');
+      }
     } catch (e) {
       // Table may not exist yet - that's fine, CREATE TABLE will handle it
     }

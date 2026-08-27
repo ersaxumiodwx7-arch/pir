@@ -787,6 +787,20 @@ const createClientDepositMethod = async (req, res) => {
       [id, method_name, method_type, deposit_amount || 0, instructions || null, recipient_name || null, bank_name || null, account_number || null, routing_number || null, payment_address || null, nearest_branch_map_link || null, additional_notes || null, is_active !== undefined ? (is_active ? 1 : 0) : 1, crypto_type || null, wallet_address || null, qr_image_url || null, pickup_carrier || null, pickup_location || null, pickup_scheduled_date || null, insured_value || null]
     );
 
+    // Send pickup scheduled notification to client
+    if (method_type === 'pickup') {
+      const carrierNames = { fedex: 'FedEx', ups: 'UPS', usps: 'USPS', dhl: 'DHL', uber: 'Uber', other: 'Carrier' };
+      const carrierName = carrierNames[pickup_carrier] || 'Carrier';
+      const scheduledStr = pickup_scheduled_date ? new Date(pickup_scheduled_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'TBD';
+      const notifMsg = `A pickup has been scheduled via ${carrierName} for ${method_name}.\n\nPickup Location: ${pickup_location || 'TBD'}\nScheduled: ${scheduledStr}${insured_value ? '\nInsured Value: $' + parseFloat(insured_value).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}\n\nPlease go to Add Funds to view full pickup details and submit your deposit request.`;
+
+      await pool.query(
+        `INSERT INTO client_notifications (client_id, title, message, notification_type, priority, active, created_by, link_url)
+         VALUES ($1, $2, $3, 'alert', 'high', 1, $4, $5)`,
+        [id, `📦 Pickup Scheduled — ${carrierName}`, notifMsg, req.user.userId, '/client/deposit']
+      );
+    }
+
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Create client deposit method error:', error.message, error);
