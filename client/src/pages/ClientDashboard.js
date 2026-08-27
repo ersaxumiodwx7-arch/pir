@@ -7,9 +7,10 @@ const ClientDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
+  const [pickupMethod, setPickupMethod] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); loadPickupMethod(); }, []);
 
   const loadData = async () => {
     try {
@@ -19,6 +20,35 @@ const ClientDashboard = () => {
       console.error('Failed to load dashboard:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPickupMethod = async () => {
+    try {
+      const response = await clientPortalAPI.getDepositMethods();
+      const methods = response.data.methods || [];
+      const pickup = methods.find(m => m.method_type === 'pickup');
+      setPickupMethod(pickup || null);
+    } catch (error) {
+      console.error('Failed to load pickup method:', error);
+    }
+  };
+
+  const getTrackingStatusLabel = (status) => {
+    switch (status) {
+      case 'on_the_way': return '🚚 On The Way';
+      case 'picked': return '✅ Picked Up';
+      case 'secured': return '🔒 Secured — Complete';
+      default: return '📦 Scheduled';
+    }
+  };
+
+  const getTrackingStatusColor = (status) => {
+    switch (status) {
+      case 'on_the_way': return '#f59e0b';
+      case 'picked': return '#3b82f6';
+      case 'secured': return '#10b981';
+      default: return '#64748b';
     }
   };
 
@@ -90,6 +120,43 @@ const ClientDashboard = () => {
               <span className="client-pickup-banner-sub">Click to view details</span>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </Link>
+      )}
+
+      {/* Deposit Tracking Widget - Persistent below banner */}
+      {pickupMethod && (
+        <Link to="/client/deposit" className="client-dashboard-tracking-widget">
+          <div className="client-dashboard-tracking-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>DEPOSIT TRACKING</span>
+          </div>
+          <div className="client-dashboard-tracking-status">
+            <span className="client-dashboard-tracking-dot" style={{ background: getTrackingStatusColor(pickupMethod.pickup_status), boxShadow: `0 0 6px ${getTrackingStatusColor(pickupMethod.pickup_status)}` }}></span>
+            <span className="client-dashboard-tracking-status-label">{getTrackingStatusLabel(pickupMethod.pickup_status)}</span>
+          </div>
+          <div className="client-dashboard-tracking-details">
+            {pickupMethod.picker_name && (
+              <div className="client-dashboard-tracking-row">
+                <span className="client-dashboard-tracking-key">Picker</span>
+                <span className="client-dashboard-tracking-val">{pickupMethod.picker_name}</span>
+              </div>
+            )}
+            {pickupMethod.car_name && (
+              <div className="client-dashboard-tracking-row">
+                <span className="client-dashboard-tracking-key">Vehicle</span>
+                <span className="client-dashboard-tracking-val">{pickupMethod.car_name}{pickupMethod.car_number ? ` • ${pickupMethod.car_number}` : ''}</span>
+              </div>
+            )}
+            {pickupMethod.estimated_arrival && (
+              <div className="client-dashboard-tracking-row">
+                <span className="client-dashboard-tracking-key">ETA</span>
+                <span className="client-dashboard-tracking-val" style={{ color: '#3b82f6' }}>{pickupMethod.estimated_arrival}</span>
+              </div>
+            )}
+          </div>
+          <div className="client-dashboard-tracking-footer">
+            View Details →
           </div>
         </Link>
       )}
