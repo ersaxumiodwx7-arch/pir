@@ -531,7 +531,6 @@ const ClientDeposit = () => {
                           <span className="pickup-info-value">{selectedMethod.recipient_name}</span>
                         </div>
                       )}
-                    </div>
 
                     {/* Bold Instructions Section */}
                     <div className="pickup-instructions-section">
