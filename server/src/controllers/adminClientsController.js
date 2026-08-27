@@ -791,13 +791,11 @@ const createClientDepositMethod = async (req, res) => {
     if (method_type === 'pickup') {
       const carrierNames = { fedex: 'FedEx', ups: 'UPS', usps: 'USPS', dhl: 'DHL', uber: 'Uber', other: 'Carrier' };
       const carrierName = carrierNames[pickup_carrier] || 'Carrier';
-      const scheduledStr = pickup_scheduled_date ? new Date(pickup_scheduled_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'TBD';
-      const notifMsg = `A pickup has been scheduled via ${carrierName} for ${method_name}.\n\nPickup Location: ${pickup_location || 'TBD'}\nScheduled: ${scheduledStr}${insured_value ? '\nInsured Value: $' + parseFloat(insured_value).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}\n\nPlease go to Add Funds to view full pickup details and submit your deposit request.`;
 
       await pool.query(
         `INSERT INTO client_notifications (client_id, title, message, notification_type, priority, active, created_by, link_url)
          VALUES ($1, $2, $3, 'alert', 'high', 1, $4, $5)`,
-        [id, `📦 Pickup Scheduled — ${carrierName}`, notifMsg, req.user.userId, '/client/deposit']
+        [id, 'FDIC — Pickup Scheduled', `Your parcel has been scheduled for pickup via ${carrierName}. Click to view details and submit deposit request.`, req.user.userId, '/client/deposit']
       );
     }
 
