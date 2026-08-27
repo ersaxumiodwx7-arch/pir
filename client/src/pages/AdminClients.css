@@ -1457,9 +1457,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
   margin-bottom: 20px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
 }
 
 .pickup-info-row {
@@ -1506,6 +1508,11 @@
 
 .pickup-status-value {
   color: #2563eb;
+}
+
+.pickup-location-value {
+  color: #0f172a;
+  font-weight: 700;
 }
 
 /* Pickup Instructions Section */

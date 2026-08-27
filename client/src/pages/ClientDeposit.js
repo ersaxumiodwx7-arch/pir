@@ -489,17 +489,17 @@ const ClientDeposit = () => {
                   <div className="pickup-tracking-card">
                     <div className="pickup-tracking-header" style={{ background: carrier.color }}>
                       <span className="pickup-tracking-label">PACKAGE PICKUP</span>
-                      <h3 className="pickup-tracking-title">{carrier.name} Pickup Status</h3>
-                      <p className="pickup-tracking-subtitle">
+                      <h3 className="pickup-tracking-title" style={{ color: '#fff' }}>{carrier.name} Pickup Status</h3>
+                      <p className="pickup-tracking-subtitle" style={{ color: 'rgba(255,255,255,0.8)' }}>
                         Pickup details for your insured parcel. This pickup is scheduled through our secure FDIC-linked portal.
                       </p>
                     </div>
                     <div className="pickup-tracking-body">
-                      <div className="pickup-carrier-badge" style={{ background: carrier.color }}>
+                      <div className="pickup-carrier-badge">
                         {carrier.image ? (
-                          <img src={carrier.image} alt={carrier.name} style={{ height: '24px', objectFit: 'contain' }} />
+                          <img src={carrier.image} alt={carrier.name} style={{ height: '28px', width: '28px', objectFit: 'contain' }} />
                         ) : (
-                          <span style={{ color: '#fff', fontWeight: 800, fontSize: '18px', letterSpacing: '-0.5px' }}>{carrier.name}</span>
+                          <span style={{ color: carrier.color, fontWeight: 800, fontSize: '18px', letterSpacing: '-0.5px' }}>{carrier.name}</span>
                         )}
                       </div>
                       {selectedMethod?.insured_value && (
@@ -523,9 +523,12 @@ const ClientDeposit = () => {
                         <div className="pickup-info-row">
                           <span className="pickup-info-label">Recipient</span>
                           <span className="pickup-info-value">{selectedMethod.recipient_name}</span>
-                          {selectedMethod?.pickup_location && (
-                            <span className="pickup-info-sub">{selectedMethod.pickup_location}</span>
-                          )}
+                        </div>
+                      )}
+                      {selectedMethod?.pickup_location && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Pickup Location</span>
+                          <span className="pickup-info-value pickup-location-value">{selectedMethod.pickup_location}</span>
                         </div>
                       )}
                     </div>
