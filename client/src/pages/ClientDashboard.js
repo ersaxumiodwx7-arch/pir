@@ -7,6 +7,7 @@ const ClientDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => { loadData(); }, []);
 
@@ -59,8 +60,6 @@ const ClientDashboard = () => {
 
   // Find the latest unread pickup notification
   const pickupNotif = recent_notifications.find(n => !n.is_read && n.link_url === '/client/deposit');
-
-  const navigate = useNavigate();
 
   return (
     <div className="client-dashboard">
