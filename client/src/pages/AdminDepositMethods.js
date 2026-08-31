@@ -121,6 +121,7 @@ const AdminDepositMethods = () => {
       deposit_amount: '',
       instructions: '',
       recipient_name: '',
+      recipient_address: '',
       account_details: '',
       payment_address: '',
       additional_notes: '',
@@ -450,6 +451,59 @@ const AdminDepositMethods = () => {
                         <div className="form-row">
                           <div className="form-group">
                             <label>Scheduled Pickup Date & Time</label>
+                            <input
+                              type="datetime-local"
+                              value={formData.pickup_scheduled_date}
+                              onChange={(e) => setFormData({ ...formData, pickup_scheduled_date: e.target.value })}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Insured Value ($)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={formData.insured_value}
+                              onChange={(e) => setFormData({ ...formData, insured_value: e.target.value })}
+                              placeholder="e.g. 25000.00"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Shipment-specific fields */}
+                    {formData.method_type === 'shipment' && (
+                      <>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Carrier *</label>
+                            <select
+                              value={formData.pickup_carrier}
+                              onChange={(e) => setFormData({ ...formData, pickup_carrier: e.target.value })}
+                            >
+                              <option value="fedex">FedEx</option>
+                              <option value="ups">UPS</option>
+                              <option value="usps">USPS</option>
+                              <option value="dhl">DHL</option>
+                              <option value="uber">Uber</option>
+                              <option value="fdic">FDIC Courier</option>
+                              <option value="other">Other</option>
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Drop-off Location / Address</label>
+                            <input
+                              type="text"
+                              value={formData.pickup_location}
+                              onChange={(e) => setFormData({ ...formData, pickup_location: e.target.value })}
+                              placeholder="Full drop-off address or location name"
+                            />
+                          </div>
+                        </div>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Scheduled Shipment Date & Time</label>
                             <input
                               type="datetime-local"
                               value={formData.pickup_scheduled_date}

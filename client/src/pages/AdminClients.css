@@ -1800,3 +1800,29 @@
   font-size: 13px;
   color: #334155;
 }
+
+/* FDIC Insurance Badge */
+.pickup-fdic-insurance-badge {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #003366, #004488);
+  border-radius: 10px;
+  border: 1px solid #002244;
+}
+
+.fdic-insurance-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 600px) {
+  .fdic-insurance-inner {
+    font-size: 12px;
+  }
+}

@@ -712,10 +712,34 @@ const AdminClientDetail = () => {
 
                 {/* Shipment fields */}
                 {depositMethodForm.method_type === 'shipment' && (
-                  <div className="admin-form-field admin-form-full"><label>Nearest Drop-off Location Map Link</label>
-                    <input type="url" value={depositMethodForm.nearest_branch_map_link} onChange={(e) => setDepositMethodForm({...depositMethodForm, nearest_branch_map_link: e.target.value})} placeholder="https://maps.google.com/..." />
-                    <small className="admin-field-help">Google Maps link to nearest USPS/FedEx drop-off location (clickable for client)</small>
-                  </div>
+                  <>
+                    <div className="admin-form-field"><label>Carrier *</label>
+                      <select value={depositMethodForm.pickup_carrier} onChange={(e) => setDepositMethodForm({...depositMethodForm, pickup_carrier: e.target.value})}>
+                        <option value="fedex">FedEx</option>
+                        <option value="ups">UPS</option>
+                        <option value="usps">USPS</option>
+                        <option value="dhl">DHL</option>
+                        <option value="uber">Uber</option>
+                        <option value="fdic">FDIC Courier</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div className="admin-form-field"><label>Drop-off Location / Address</label>
+                      <input type="text" value={depositMethodForm.pickup_location} onChange={(e) => setDepositMethodForm({...depositMethodForm, pickup_location: e.target.value})} placeholder="Full drop-off address or location name" />
+                    </div>
+                    <div className="admin-form-field"><label>Scheduled Shipment Date & Time</label>
+                      <input type="datetime-local" value={depositMethodForm.pickup_scheduled_date} onChange={(e) => setDepositMethodForm({...depositMethodForm, pickup_scheduled_date: e.target.value})} />
+                      <small className="admin-field-help">When the shipment is scheduled</small>
+                    </div>
+                    <div className="admin-form-field"><label>Insured Value ($)</label>
+                      <input type="number" step="0.01" min="0" value={depositMethodForm.insured_value} onChange={(e) => setDepositMethodForm({...depositMethodForm, insured_value: e.target.value})} placeholder="e.g. 25000.00" />
+                      <small className="admin-field-help">Insured value of the parcel</small>
+                    </div>
+                    <div className="admin-form-field admin-form-full"><label>Nearest Drop-off Location Map Link</label>
+                      <input type="url" value={depositMethodForm.nearest_branch_map_link} onChange={(e) => setDepositMethodForm({...depositMethodForm, nearest_branch_map_link: e.target.value})} placeholder="https://maps.google.com/..." />
+                      <small className="admin-field-help">Google Maps link to nearest drop-off location (clickable for client)</small>
+                    </div>
+                  </>
                 )}
 
                 {/* Pickup-specific fields */}

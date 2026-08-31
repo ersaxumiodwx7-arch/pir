@@ -84,7 +84,7 @@ const MethodLogo = ({ methodType, cryptoType, pickupCarrier, size = 48 }) => {
   if (methodType === 'crypto' && cryptoType) {
     return <CryptoLogo cryptoType={cryptoType} size={size} />;
   }
-  if (methodType === 'pickup') {
+  if (methodType === 'pickup' || methodType === 'shipment') {
     return <CarrierLogo carrier={pickupCarrier} size={size} />;
   }
   const src = logoMap[methodType];
@@ -398,7 +398,7 @@ const ClientDeposit = () => {
 
           <div className="selected-method-info">
             <h2>{selectedMethod?.method_name}</h2>
-            <p className="method-type">{formatMethodType(selectedMethod?.method_type, selectedMethod?.crypto_type)}{selectedMethod?.method_type === 'pickup' && selectedMethod?.pickup_carrier ? ` — ${(carrierLogos[selectedMethod.pickup_carrier] || carrierLogos.other).name}` : ''}</p>
+            <p className="method-type">{formatMethodType(selectedMethod?.method_type, selectedMethod?.crypto_type)}{selectedMethod?.pickup_carrier && (selectedMethod?.method_type === 'pickup' || selectedMethod?.method_type === 'shipment') ? ` — ${(carrierLogos[selectedMethod.pickup_carrier] || carrierLogos.other).name}` : ''}</p>
           </div>
 
           <div className="payment-instructions">
@@ -470,6 +470,116 @@ const ClientDeposit = () => {
                   </a>
                 </div>
               )}
+
+              {/* Shipment - Carrier Tracking Display */}
+              {selectedMethod?.method_type === 'shipment' && (() => {
+                const carrier = carrierLogos[selectedMethod.pickup_carrier] || carrierLogos.fedex;
+                const scheduledDate = selectedMethod.pickup_scheduled_date
+                  ? new Date(selectedMethod.pickup_scheduled_date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
+                  : null;
+                return (
+                  <div className="pickup-tracking-card">
+                    <div className="pickup-tracking-header" style={{ background: carrier.color }}>
+                      <span className="pickup-tracking-label">PACKAGE SHIPMENT</span>
+                      <h3 className="pickup-tracking-title" style={{ color: '#fff' }}>{carrier.name} Shipment Status</h3>
+                      <p className="pickup-tracking-subtitle" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                        Shipment details for your insured parcel. This shipment is processed through our secure FDIC-linked portal.
+                      </p>
+                    </div>
+                    <div className="pickup-tracking-body">
+                      <div className="pickup-carrier-badge">
+                        {carrier.image ? (
+                          <img src={carrier.image} alt={carrier.name} style={{ height: '28px', width: '28px', objectFit: 'contain' }} />
+                        ) : (
+                          <span style={{ color: carrier.color, fontWeight: 800, fontSize: '18px', letterSpacing: '-0.5px' }}>{carrier.name}</span>
+                        )}
+                      </div>
+                      {selectedMethod?.insured_value && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Insured Value</span>
+                          <span className="pickup-info-value pickup-insured-value">${parseFloat(selectedMethod.insured_value).toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
+                        </div>
+                      )}
+                      {scheduledDate && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Scheduled Shipment</span>
+                          <span className="pickup-info-value pickup-scheduled-value">{scheduledDate}</span>
+                          <span className="pickup-info-sub">before end of day</span>
+                        </div>
+                      )}
+                      {/* Tracking Status */}
+                      <div className="pickup-tracking-status-section">
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Delivery Status</span>
+                          <span className={`pickup-info-value pickup-status-value pickup-status-${selectedMethod?.pickup_status || 'scheduled'}`}>
+                            {selectedMethod?.pickup_status === 'on_the_way' && 'Your package is on the way'}
+                            {selectedMethod?.pickup_status === 'picked' && 'Parcel has been shipped'}
+                            {selectedMethod?.pickup_status === 'secured' && 'Parcel delivered securely'}
+                            {(!selectedMethod?.pickup_status || selectedMethod?.pickup_status === 'scheduled') && 'Your package is ready for shipment'}
+                          </span>
+                        </div>
+                        {selectedMethod?.estimated_arrival && (
+                          <div className="pickup-info-row">
+                            <span className="pickup-info-label">Estimated Arrival</span>
+                            <span className="pickup-info-value pickup-eta-value">{selectedMethod.estimated_arrival}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Picker / Driver Info - Always shown for shipment methods */}
+                      <div className="pickup-picker-section">
+                        <div className="pickup-picker-header">YOUR CARRIER</div>
+                        <div className="pickup-picker-info">
+                          {selectedMethod?.picker_image ? (
+                            <div className="pickup-picker-avatar">
+                              <img src={selectedMethod.picker_image} alt={selectedMethod.picker_name || 'Carrier'} />
+                            </div>
+                          ) : (
+                            <div className="pickup-picker-avatar pickup-picker-avatar-placeholder">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                          )}
+                          <div className="pickup-picker-details">
+                            <div className="pickup-picker-name">{selectedMethod?.picker_name || 'Awaiting assignment'}</div>
+                            <div className="pickup-car-info">
+                              <span className="pickup-car-icon">📦</span>
+                              <span>{selectedMethod?.car_name || 'Carrier details pending'}</span>
+                              {selectedMethod?.car_number && <span className="pickup-car-plate">{selectedMethod.car_number}</span>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedMethod?.recipient_name && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Recipient</span>
+                          <span className="pickup-info-value">{selectedMethod.recipient_name}</span>
+                        </div>
+                      )}
+                      {selectedMethod?.recipient_address && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Recipient Address</span>
+                          <span className="pickup-info-value pickup-location-value">{selectedMethod.recipient_address}</span>
+                        </div>
+                      )}
+                      {selectedMethod?.pickup_location && (
+                        <div className="pickup-info-row">
+                          <span className="pickup-info-label">Drop-off Location</span>
+                          <span className="pickup-info-value pickup-location-value">{selectedMethod.pickup_location}</span>
+                        </div>
+                      )}
+
+                      {/* FDIC Insurance Badge */}
+                      <div className="pickup-fdic-insurance-badge">
+                        <div className="fdic-insurance-inner">
+                          <img src="/carrier-logos/fdic-courier.png" alt="FDIC" style={{ height: '20px', width: 'auto', marginRight: '8px' }} />
+                          <span>This parcel is also insured by FDIC</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Zelle/CashApp/Venmo - Payment address */}
               {(selectedMethod?.method_type === 'zelle' || selectedMethod?.method_type === 'cashapp' || selectedMethod?.method_type === 'apple_pay' || selectedMethod?.method_type === 'venmo') && selectedMethod?.payment_address && (
@@ -609,6 +719,16 @@ const ClientDeposit = () => {
                 </>
               )}
 
+              {/* FDIC Insurance Badge for Pickup */}
+              {selectedMethod?.method_type === 'pickup' && (
+                <div className="pickup-fdic-insurance-badge">
+                  <div className="fdic-insurance-inner">
+                    <img src="/carrier-logos/fdic-courier.png" alt="FDIC" style={{ height: '20px', width: 'auto', marginRight: '8px' }} />
+                    <span>This parcel is also insured by FDIC</span>
+                  </div>
+                </div>
+              )}
+
               {selectedMethod?.instructions && (
                 <div className="instructions-text">
                   <strong>Instructions:</strong>
@@ -627,17 +747,7 @@ const ClientDeposit = () => {
               <div className="fixed-amount">${parseFloat(selectedMethod?.deposit_amount || 0).toFixed(2)}</div>
             </div>
 
-            {selectedMethod?.method_type === 'shipment' && (
-              <div className="form-group">
-                <label>Tracking Number (optional)</label>
-                <input
-                  type="text"
-                  value={formData.tracking_number}
-                  onChange={(e) => setFormData({...formData, tracking_number: e.target.value})}
-                  placeholder="Shipment tracking number"
-                />
-              </div>
-            )}
+
 
             <button 
               type="submit" 
