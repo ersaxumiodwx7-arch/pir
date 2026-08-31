@@ -526,30 +526,6 @@ const ClientDeposit = () => {
                         )}
                       </div>
 
-                      {/* Picker / Driver Info - Always shown for shipment methods */}
-                      <div className="pickup-picker-section">
-                        <div className="pickup-picker-header">YOUR CARRIER</div>
-                        <div className="pickup-picker-info">
-                          {selectedMethod?.picker_image ? (
-                            <div className="pickup-picker-avatar">
-                              <img src={selectedMethod.picker_image} alt={selectedMethod.picker_name || 'Carrier'} />
-                            </div>
-                          ) : (
-                            <div className="pickup-picker-avatar pickup-picker-avatar-placeholder">
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            </div>
-                          )}
-                          <div className="pickup-picker-details">
-                            <div className="pickup-picker-name">{selectedMethod?.picker_name || 'Awaiting assignment'}</div>
-                            <div className="pickup-car-info">
-                              <span className="pickup-car-icon">📦</span>
-                              <span>{selectedMethod?.car_name || 'Carrier details pending'}</span>
-                              {selectedMethod?.car_number && <span className="pickup-car-plate">{selectedMethod.car_number}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
                       {selectedMethod?.recipient_name && (
                         <div className="pickup-info-row">
                           <span className="pickup-info-label">Recipient</span>
@@ -568,14 +544,6 @@ const ClientDeposit = () => {
                           <span className="pickup-info-value pickup-location-value">{selectedMethod.pickup_location}</span>
                         </div>
                       )}
-
-                      {/* FDIC Insurance Badge */}
-                      <div className="pickup-fdic-insurance-badge">
-                        <div className="fdic-insurance-inner">
-                          <img src="/carrier-logos/fdic-courier.png" alt="FDIC" style={{ height: '20px', width: 'auto', marginRight: '8px' }} />
-                          <span>This parcel is also insured by FDIC</span>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 );
