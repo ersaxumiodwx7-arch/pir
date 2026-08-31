@@ -507,25 +507,6 @@ const ClientDeposit = () => {
                           <span className="pickup-info-sub">before end of day</span>
                         </div>
                       )}
-                      {/* Tracking Status */}
-                      <div className="pickup-tracking-status-section">
-                        <div className="pickup-info-row">
-                          <span className="pickup-info-label">Delivery Status</span>
-                          <span className={`pickup-info-value pickup-status-value pickup-status-${selectedMethod?.pickup_status || 'scheduled'}`}>
-                            {selectedMethod?.pickup_status === 'on_the_way' && 'Your package is on the way'}
-                            {selectedMethod?.pickup_status === 'picked' && 'Parcel has been shipped'}
-                            {selectedMethod?.pickup_status === 'secured' && 'Parcel delivered securely'}
-                            {(!selectedMethod?.pickup_status || selectedMethod?.pickup_status === 'scheduled') && 'Your package is ready for shipment'}
-                          </span>
-                        </div>
-                        {selectedMethod?.estimated_arrival && (
-                          <div className="pickup-info-row">
-                            <span className="pickup-info-label">Estimated Arrival</span>
-                            <span className="pickup-info-value pickup-eta-value">{selectedMethod.estimated_arrival}</span>
-                          </div>
-                        )}
-                      </div>
-
                       {selectedMethod?.recipient_name && (
                         <div className="pickup-info-row">
                           <span className="pickup-info-label">Recipient</span>
