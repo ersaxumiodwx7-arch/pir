@@ -81,7 +81,7 @@ const ClientLayout = () => {
           <MenuIcon size={24} />
         </button>
         <div className="client-mobile-logo">
-          <span>FDIC</span>
+          <span style={{ color: '#fff' }}>FDIC</span>
         </div>
       </div>
 
@@ -92,9 +92,9 @@ const ClientLayout = () => {
       <aside className={`client-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="client-sidebar-header">
           <div className="client-sidebar-logo">
-            <span style={{ color: '#3b82f6' }}>FDIC</span>
+            <span style={{ color: '#fff' }}>FDIC</span>
           </div>
-          <p style={{ fontSize: '11px', color: '#64748b', margin: '8px 0 0', letterSpacing: '0.3px' }}>Federal Deposit Insurance Corp.</p>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', margin: '8px 0 0', letterSpacing: '0.3px' }}>Federal Deposit Insurance Corp.</p>
         </div>
 
         <div className="client-sidebar-user">

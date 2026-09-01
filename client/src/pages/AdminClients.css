@@ -1193,8 +1193,9 @@
 }
 
 /* Client Pages Header - White text */
-.client-pages-header h1 {
-  color: #fff;
+.client-pages-header h1,
+.client-page-header h1 {
+  color: #fff !important;
 }
 
 /* Branded Payment Method Card */
