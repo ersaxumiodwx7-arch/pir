@@ -530,14 +530,49 @@ const ClientDeposit = () => {
                 );
               })()}
 
-              {/* Zelle/CashApp/Venmo - Payment address */}
-              {(selectedMethod?.method_type === 'zelle' || selectedMethod?.method_type === 'cashapp' || selectedMethod?.method_type === 'apple_pay' || selectedMethod?.method_type === 'venmo') && selectedMethod?.payment_address && (
-                <div className="copy-row">
-                  <span className="copy-label"><strong>Payment Address:</strong></span>
-                  <span className="copy-value account-detail-value">{selectedMethod.payment_address}</span>
-                  <CopyButton text={selectedMethod.payment_address} />
-                </div>
-              )}
+              {/* Zelle/CashApp/Venmo/Apple Pay - Branded Payment Card */}
+              {(selectedMethod?.method_type === 'zelle' || selectedMethod?.method_type === 'cashapp' || selectedMethod?.method_type === 'apple_pay' || selectedMethod?.method_type === 'venmo') && (() => {
+                const methodColors = {
+                  apple_pay: { bg: '#000000', label: 'SECURE PAYMENT' },
+                  cashapp: { bg: '#00c853', label: 'CASH APP PAYMENT' },
+                  zelle: { bg: '#6c1cd3', label: 'ZELLE TRANSFER' },
+                  venmo: { bg: '#3d95ce', label: 'VENMO PAYMENT' },
+                };
+                const mc = methodColors[selectedMethod.method_type] || { bg: '#1e293b', label: 'PAYMENT' };
+                const methodNames = { apple_pay: 'Apple Pay', cashapp: 'Cash App', zelle: 'Zelle', venmo: 'Venmo' };
+                const mName = methodNames[selectedMethod.method_type] || 'Payment';
+                return (
+                  <div className="payment-card">
+                    <div className="payment-card-header" style={{ background: mc.bg }}>
+                      <span className="payment-card-label">{mc.label}</span>
+                      <h3 className="payment-card-title">{mName} Payment</h3>
+                      <p className="payment-card-subtitle">Send your payment securely through the FDIC-linked portal.</p>
+                    </div>
+                    <div className="payment-card-body">
+                      <div className="payment-card-logo">
+                        <MethodLogo methodType={selectedMethod.method_type} size={40} />
+                      </div>
+                      <div className="payment-card-info-row">
+                        <div>
+                          <div className="payment-card-info-label">Payment Address</div>
+                          <div className="payment-card-info-copy">
+                            <span className="copy-value">{selectedMethod.payment_address}</span>
+                            <CopyButton text={selectedMethod.payment_address} />
+                          </div>
+                        </div>
+                      </div>
+                      {selectedMethod?.recipient_name && (
+                        <div className="payment-card-info-row">
+                          <div>
+                            <div className="payment-card-info-label">Recipient</div>
+                            <div className="payment-card-info-value">{selectedMethod.recipient_name}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Pickup - FedEx-style Tracking Display */}
               {selectedMethod?.method_type === 'pickup' && (() => {

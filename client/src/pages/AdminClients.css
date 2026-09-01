@@ -1192,6 +1192,118 @@
   margin: 0 0 8px 0;
 }
 
+/* Client Pages Header - White text */
+.client-pages-header h1 {
+  color: #fff;
+}
+
+/* Branded Payment Method Card */
+.payment-card {
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.payment-card-header {
+  padding: 24px 24px 20px;
+  color: #fff;
+  position: relative;
+}
+
+.payment-card-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.85;
+}
+
+.payment-card-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: #fff;
+}
+
+.payment-card-subtitle {
+  font-size: 13px;
+  margin: 0;
+  opacity: 0.75;
+  line-height: 1.5;
+  color: #fff;
+}
+
+.payment-card-body {
+  background: #fff;
+  padding: 24px;
+}
+
+.payment-card-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #f1f5f9;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.payment-card-logo img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.payment-card-info-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.payment-card-info-row:last-child {
+  border-bottom: none;
+}
+
+.payment-card-info-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.payment-card-info-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.payment-card-info-copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-card-info-copy .copy-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 14px;
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #1e293b;
+  letter-spacing: 0.5px;
+}
+
 .payment-instructions {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
