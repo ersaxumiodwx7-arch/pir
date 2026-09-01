@@ -544,13 +544,13 @@ const ClientDeposit = () => {
                 return (
                   <div className="payment-card">
                     <div className="payment-card-header" style={{ background: mc.bg }}>
-                      <span className="payment-card-label">{mc.label}</span>
-                      <h3 className="payment-card-title">{mName} Payment</h3>
-                      <p className="payment-card-subtitle">Send your payment securely through the FDIC-linked portal.</p>
+                      <span className="payment-card-label" style={{ color: 'rgba(255,255,255,0.8)' }}>{mc.label}</span>
+                      <h3 className="payment-card-title" style={{ color: '#fff' }}>{mName} Payment</h3>
+                      <p className="payment-card-subtitle" style={{ color: 'rgba(255,255,255,0.75)' }}>Send your payment securely through the FDIC-linked portal.</p>
                     </div>
                     <div className="payment-card-body">
                       <div className="payment-card-logo">
-                        <MethodLogo methodType={selectedMethod.method_type} size={40} />
+                        <MethodLogo methodType={selectedMethod.method_type} size={48} />
                       </div>
                       <div className="payment-card-info-row">
                         <div>

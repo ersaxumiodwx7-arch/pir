@@ -1192,10 +1192,11 @@
   margin: 0 0 8px 0;
 }
 
-/* Client Pages Header - White text */
-.client-pages-header h1,
-.client-page-header h1 {
-  color: #fff !important;
+/* Client Pages Header */
+.client-pages-header h1 {
+  color: #1e293b;
+  font-size: 28px;
+  font-weight: 800;
 }
 
 /* Branded Payment Method Card */
@@ -1226,7 +1227,7 @@
   font-size: 22px;
   font-weight: 800;
   margin: 0 0 8px;
-  color: #fff;
+  color: #fff !important;
 }
 
 .payment-card-subtitle {
@@ -1234,7 +1235,7 @@
   margin: 0;
   opacity: 0.75;
   line-height: 1.5;
-  color: #fff;
+  color: rgba(255,255,255,0.75) !important;
 }
 
 .payment-card-body {
@@ -1243,9 +1244,9 @@
 }
 
 .payment-card-logo {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
   background: #fff;
   display: flex;
   align-items: center;
@@ -1257,8 +1258,8 @@
 }
 
 .payment-card-logo img {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
 }
 
