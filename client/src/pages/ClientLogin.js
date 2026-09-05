@@ -336,22 +336,72 @@ const ClientLogin = () => {
         </div>
       </div>
 
-      {/* Feature Cards */}
-      <div className="banking-features">
-        <div className="feature-card">
-          <div className="feature-icon"><ShieldIcon size={28} /></div>
-          <h3>FDIC Protection</h3>
-          <p>Your deposits are insured up to $250,000 per depositor, per institution. Full coverage backed by the U.S. government.</p>
+      {/* Fraud Victim Assistance Section */}
+      <div className="fraud-assistance-section">
+        <div className="fraud-assistance-card">
+          <div className="fraud-assistance-content">
+            <span className="fraud-section-label">FRAUD VICTIM ASSISTANCE</span>
+            <h2 className="fraud-section-title">Dedicated recovery support for verified victims</h2>
+            <p className="fraud-section-desc">
+              The Fraud Victim Assistance Program is built exclusively for
+              individuals who have suffered confirmed financial fraud or identity theft. Our
+              Recovery Specialists coordinate fund tracing, Safe Custody account
+              management, and secure document handling on your behalf.
+            </p>
+            <ul className="fraud-section-list">
+              <li>Case status, wire recovery, and specialist contact in one secure workspace</li>
+              <li>FDIC Safe Custody segregation for recovered and in-transit funds</li>
+              <li>Encrypted messaging and shipment tracking for evidence and replacement cards</li>
+            </ul>
+          </div>
+          <div className="fraud-assistance-image">
+            <div className="fraud-help-card">
+              <span className="fraud-help-title">Help for Victims</span>
+              <div className="fraud-help-overlay"></div>
+            </div>
+          </div>
         </div>
-        <div className="feature-card">
-          <div className="feature-icon"><StarIcon size={28} /></div>
-          <h3>Rewards Program</h3>
-          <p>Earn points on every transaction. Redeem for cashback, travel rewards, or exclusive banking benefits.</p>
-        </div>
-        <div className="feature-card">
-          <div className="feature-icon"><LockIcon size={28} /></div>
-          <h3>Security Tips</h3>
-          <p>Stay protected with multi-factor authentication, real-time alerts, and advanced fraud monitoring.</p>
+      </div>
+
+      {/* Restricted Access Section */}
+      <div className="restricted-access-section">
+        <div className="restricted-access-card">
+          <div className="restricted-access-image">
+            <div className="restricted-illustration">
+              <svg viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="60" width="60" height="140" rx="4" fill="rgba(255,255,255,0.15)"/>
+                <rect x="90" y="40" width="50" height="160" rx="4" fill="rgba(255,255,255,0.12)"/>
+                <rect x="150" y="20" width="70" height="180" rx="4" fill="rgba(255,255,255,0.18)"/>
+                <rect x="230" y="50" width="55" height="150" rx="4" fill="rgba(255,255,255,0.12)"/>
+                <rect x="295" y="30" width="65" height="170" rx="4" fill="rgba(255,255,255,0.15)"/>
+                <rect x="10" y="180" width="380" height="20" rx="2" fill="rgba(255,255,255,0.08)"/>
+              </svg>
+              <div className="restricted-people">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="person-silhouette">
+                    <div className="person-head"></div>
+                    <div className="person-body"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="restricted-access-content">
+            <span className="restricted-section-label">RESTRICTED ACCESS</span>
+            <h2 className="restricted-section-title">Not open to the general public</h2>
+            <p className="restricted-section-desc">
+              This is <strong>not</strong> a retail banking login and <strong>not</strong> available for walk-
+              in customers, new account opening, or self-service
+              enrollment. You cannot create credentials here. Every User
+              ID is issued only after verified fraud intake and case
+              assignment.
+            </p>
+            <div className="restricted-warning-box">
+              <p>No public registration. Unauthorized access attempts are
+              logged and may be referred for federal review. If you are not
+              an enrolled fraud victim, do not use this portal.</p>
+            </div>
+          </div>
         </div>
       </div>
 
