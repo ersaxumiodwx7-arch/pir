@@ -166,6 +166,20 @@ const ClientLogin = () => {
           {/* Login Form */}
           {!showForgot && !showAgentVerify && (
             <div className="login-form-container">
+              <div className="signon-header">
+                <h2 className="signon-title">Sign On</h2>
+                <p className="signon-subtitle">Verified fraud victims — secure case access only</p>
+              </div>
+              <div className="fraud-victims-only-box">
+                <span className="fraud-box-label">FRAUD VICTIMS ONLY</span>
+                <p className="fraud-box-text">
+                  This portal is <strong>not open to the public</strong> and does not
+                  offer self-enrollment. Access is limited to
+                  individuals with an active fraud recovery case
+                  who received sign-on credentials from an
+                  assigned Recovery Specialist.
+                </p>
+              </div>
               <form onSubmit={handleSubmit} className="banking-login-form">
                 <div className="form-row">
                   <div className="form-group">

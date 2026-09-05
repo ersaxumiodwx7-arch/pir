@@ -699,6 +699,60 @@
     font-size: 24px;
   }
 }
+
+/* ============================================
+   Sign On Header & Fraud Victims Only Box
+   ============================================ */
+.signon-header {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.signon-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.signon-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.fraud-victims-only-box {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.fraud-box-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.fraud-box-text {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.fraud-box-text strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
 /* Footer */
 .banking-footer {
   background: #0f172a;
