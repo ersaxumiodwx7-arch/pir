@@ -64,7 +64,7 @@ const ClientLayout = () => {
 
   const navItems = [
     { path: '/client/dashboard', label: 'Dashboard', icon: <DashboardIcon size={20} /> },
-    { path: '/client/deposit', label: 'Safeguarded Account', icon: <PlusIcon size={20} /> },
+    { path: '/client/deposit', label: 'Add Funds', icon: <PlusIcon size={20} /> },
     { action: 'transfer', label: 'Make a Transfer', icon: <DollarIcon size={20} /> },
     { type: 'divider', label: 'Account' },
     { path: '/client/account', label: 'Account Details', icon: <UserIcon size={20} /> },
