@@ -89,7 +89,17 @@ const MethodLogo = ({ methodType, cryptoType, pickupCarrier, size = 48 }) => {
   }
   const src = logoMap[methodType];
   if (src) {
-    return <img src={src} alt={methodType} style={{ width: size, height: size, borderRadius: 10, objectFit: 'cover' }} />;
+    return (
+      <div style={{
+        width: size, height: size, borderRadius: 12,
+        background: '#ffffff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: '1px solid #e2e8f0', overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)', padding: '4px'
+      }}>
+        <img src={src} alt={methodType} style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
+      </div>
+    );;
   }
   // Fallback SVGs for non-brand methods
   const fallbacks = {
@@ -304,7 +314,7 @@ const ClientDeposit = () => {
   return (
     <div className="client-pages-container">
       <div className="client-pages-header">
-        <h1>Add Funds</h1>
+        <h1>Add Funds to Safeguarded Account</h1>
       </div>
 
       {error && (
@@ -324,6 +334,57 @@ const ClientDeposit = () => {
 
       {!showForm ? (
         <>
+          
+      {/* Safeguarding Info Section */}
+      <div className="safeguard-info-section">
+        <div className="safeguard-card">
+          <div className="safeguard-card-left">
+            <span className="safeguard-label">FDIC SAFE CUSTODY</span>
+            <h2 className="safeguard-title">Add Funds to Safeguarded Account</h2>
+            <p className="safeguard-desc">
+              All funds deposited through this portal are held in a segregated FDIC Safe Custody Account - 
+              provisionally credited recoveries pending final disposition. Your deposits are insured up to 
+              $250,000 per depositor, per category.
+            </p>
+            <div className="safeguard-details">
+              <div className="safeguard-detail-row">
+                <span className="safeguard-detail-label">Account Type</span>
+                <span className="safeguard-detail-value">FDIC Safe Custody - Fraud Recovery</span>
+              </div>
+              <div className="safeguard-detail-row">
+                <span className="safeguard-detail-label">Insurance Category</span>
+                <span className="safeguard-detail-value">Single account - victim program pass-through</span>
+              </div>
+              <div className="safeguard-detail-row">
+                <span className="safeguard-detail-label">Wire / ACH Outbound</span>
+                <span className="safeguard-detail-value">Blocked - compliance & federal clearance</span>
+              </div>
+            </div>
+            <p className="safeguard-note">
+              Temporary segregated deposit for provisionally credited recoveries only. Not 
+              spendable until identity verification and federal review complete. FDIC insurance up 
+              to $250,000 per depositor, per category. Do not transfer the same loss elsewhere 
+              without written clearance from your Recovery Specialist.
+            </p>
+          </div>
+          <div className="safeguard-card-right">
+            <div className="safeguard-stat-card">
+              <span className="safeguard-stat-label">Product Type</span>
+              <span className="safeguard-stat-value">FDIC Safe Custody</span>
+            </div>
+            <div className="safeguard-stat-card">
+              <span className="safeguard-stat-label">Coverage</span>
+              <span className="safeguard-stat-value safeguard-stat-big">$250,000</span>
+              <span className="safeguard-stat-sub">per depositor, per category</span>
+            </div>
+            <div className="safeguard-stat-card safeguard-stat-green-card">
+              <span className="safeguard-stat-label">Funds Protection</span>
+              <span className="safeguard-stat-value safeguard-stat-green">FDIC Insured</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
           <div className="deposit-methods-grid">
             {methods.length === 0 ? (
               <div className="empty-state">
