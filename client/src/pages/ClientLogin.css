@@ -443,6 +443,262 @@
   margin: 0;
 }
 
+
+/* ============================================
+   Fraud Victim Assistance Section
+   ============================================ */
+.fraud-assistance-section {
+  max-width: 1200px;
+  margin: 60px auto 0;
+  padding: 0 24px;
+}
+
+.fraud-assistance-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 16px;
+  padding: 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.fraud-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b82f6;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.fraud-section-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  margin: 0 0 20px;
+}
+
+.fraud-section-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+
+.fraud-section-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fraud-section-list li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+.fraud-section-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #3b82f6;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.fraud-assistance-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fraud-help-card {
+  width: 100%;
+  height: 220px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.fraud-help-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: #ffffff;
+  z-index: 1;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.fraud-help-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(30, 58, 95, 0.4) 0%, rgba(45, 90, 135, 0.2) 100%);
+}
+
+/* ============================================
+   Restricted Access Section
+   ============================================ */
+.restricted-access-section {
+  max-width: 1200px;
+  margin: 32px auto 0;
+  padding: 0 24px;
+}
+
+.restricted-access-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 16px;
+  padding: 48px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.restricted-access-image {
+  position: relative;
+}
+
+.restricted-illustration {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  border-radius: 12px;
+  padding: 32px;
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  position: relative;
+}
+
+.restricted-illustration svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.6;
+}
+
+.restricted-people {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  z-index: 1;
+  position: relative;
+}
+
+.person-silhouette {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.person-head {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2px;
+}
+
+.person-body {
+  width: 20px;
+  height: 28px;
+  border-radius: 10px 10px 4px 4px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.person-silhouette:nth-child(odd) .person-body {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+.person-silhouette:nth-child(3n) .person-body {
+  background: rgba(100, 150, 200, 0.4);
+}
+
+.restricted-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3b82f6;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.restricted-section-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+  margin: 0 0 20px;
+}
+
+.restricted-section-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+
+.restricted-section-desc strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.restricted-warning-box {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.restricted-warning-box p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ============================================
+   Responsive for new sections
+   ============================================ */
+@media (max-width: 768px) {
+  .fraud-assistance-card {
+    grid-template-columns: 1fr;
+    padding: 32px;
+    gap: 32px;
+  }
+
+  .fraud-section-title,
+  .restricted-section-title {
+    font-size: 24px;
+  }
+
+  .restricted-access-card {
+    grid-template-columns: 1fr;
+    padding: 32px;
+    gap: 32px;
+  }
+
+  .fraud-help-title {
+    font-size: 24px;
+  }
+}
 /* Footer */
 .banking-footer {
   background: #0f172a;
