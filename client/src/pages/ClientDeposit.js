@@ -469,7 +469,7 @@ const ClientDeposit = () => {
               {/* Shipment - Nearest drop-off location map link */}
               {selectedMethod?.method_type === 'shipment' && selectedMethod?.nearest_branch_map_link && (
                 <div className="map-link-section">
-                  <strong>Nearest Drop-off Location:</strong>
+                  <strong>FACILITY/SHIPMENT INFORMATION:</strong>
                   <a 
                     href={selectedMethod.nearest_branch_map_link} 
                     target="_blank" 
@@ -532,7 +532,7 @@ const ClientDeposit = () => {
                       )}
                       {selectedMethod?.pickup_location && (
                         <div className="pickup-info-row">
-                          <span className="pickup-info-label">Drop-off Location</span>
+                          <span className="pickup-info-label">FACILITY/SHIPMENT INFORMATION</span>
                           <span className="pickup-info-value pickup-location-value">{selectedMethod.pickup_location}</span>
                         </div>
                       )}
@@ -725,9 +725,16 @@ const ClientDeposit = () => {
               )}
 
               {selectedMethod?.instructions && (
-                <div className="instructions-text">
-                  <strong>Instructions:</strong>
-                  <p>{selectedMethod.instructions}</p>
+                <div className="deposit-instructions-card">
+                  <div className="deposit-instructions-header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span>DEPOSIT INSTRUCTIONS</span>
+                  </div>
+                  <div className="deposit-instructions-body">
+                    {selectedMethod.instructions.split('\n').map((line, i) => (
+                      <p key={i} className="deposit-instructions-line">{line}</p>
+                    ))}
+                  </div>
                 </div>
               )}
               {selectedMethod?.additional_notes && (
