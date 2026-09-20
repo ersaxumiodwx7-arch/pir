@@ -38,6 +38,7 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
+  me: () => api.get('/auth/me'),
 };
 
 // Forms API

@@ -165,4 +165,55 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { login };
+// GET /api/auth/me - current logged-in admin info (username, role, subscription expiry)
+const me = async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+    if (!decoded.userId) return res.status(403).json({ error: 'Admin access required' });
+
+    const userResult = await pool.query('SELECT id, email, username FROM users WHERE id = $1', [decoded.userId]);
+    if (userResult.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    const user = userResult.rows[0];
+
+    const superUsername = process.env.ADMIN_USERNAME || 'pirates';
+    let role = decoded.role || 'admin';
+    let subscription_expires_at = null;
+    let is_active = 1;
+    if (user.username === superUsername) {
+      role = 'super_admin';
+    } else {
+      try {
+        const adminRow = await pool.query('SELECT * FROM admins WHERE username = $1', [user.username]);
+        if (adminRow.rows.length > 0) {
+          role = adminRow.rows[0].role === 'super_admin' ? 'super_admin' : 'admin';
+          subscription_expires_at = adminRow.rows[0].subscription_expires_at;
+          is_active = adminRow.rows[0].is_active;
+        }
+      } catch (e) {
+        // admins table missing - legacy setup
+      }
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role,
+        subscription_expires_at,
+        is_active: !!is_active
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error: ' + error.message });
+  }
+};
+
+module.exports = { login, me };

@@ -50,6 +50,17 @@ const AdminSidebar = () => {
   const { logout, user } = useAuth();
   const isSuperAdmin = user?.role === 'super_admin';
 
+  // Subscription expiry display for normal admins
+  let expiryText = 'No subscription';
+  let expiryDays = null;
+  if (user?.subscription_expires_at) {
+    const exp = new Date(user.subscription_expires_at);
+    expiryDays = Math.ceil((exp.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+    expiryText = expiryDays <= 0
+      ? 'Expired'
+      : `${exp.toLocaleDateString()} (${expiryDays}d left)`;
+  }
+
   const isActive = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
     return location.pathname.startsWith(path);
@@ -63,6 +74,26 @@ const AdminSidebar = () => {
           <span>Pirates Panel</span>
         </h2>
         <p>@bandzxstacks</p>
+        {user && (
+          <div className="admin-sidebar-account">
+            <div className="admin-sidebar-account-row">
+              <span className="admin-sidebar-account-label">Signed in</span>
+              <span className="admin-sidebar-account-value">{user.username || user.email}</span>
+            </div>
+            {user.role !== 'super_admin' && (
+              <div className="admin-sidebar-account-row">
+                <span className="admin-sidebar-account-label">Access expires</span>
+                <span className={`admin-sidebar-account-value${expiryDays !== null && expiryDays <= 7 ? ' expiring' : ''}`}>{expiryText}</span>
+              </div>
+            )}
+            {user.role === 'super_admin' && (
+              <div className="admin-sidebar-account-row">
+                <span className="admin-sidebar-account-label">Role</span>
+                <span className="admin-sidebar-account-value super">Super Admin</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="admin-sidebar-nav">

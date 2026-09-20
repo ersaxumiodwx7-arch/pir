@@ -13,6 +13,14 @@ export const AuthProvider = ({ children }) => {
     
     if (token && userData) {
       setUser(JSON.parse(userData));
+      // Refresh account info (username, role, subscription expiry) from server
+      authAPI.me().then((response) => {
+        if (response.data?.user) {
+          const fresh = response.data.user;
+          localStorage.setItem('user', JSON.stringify(fresh));
+          setUser(fresh);
+        }
+      }).catch(() => { /* keep cached user */ });
     }
     setLoading(false);
   }, []);
