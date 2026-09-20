@@ -71,12 +71,32 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Support login by email OR username (use separate params for SQLite compat)
-    const result = await pool.query(
+    let result = await pool.query(
       'SELECT * FROM users WHERE email = $1 OR username = $2',
       [email, email]
     );
     
     console.log('Login attempt for:', email);
+
+    // Auto-heal: admin accounts created in the admins table but missing a users row
+    // (e.g. created before mirroring was added) get their user row created on first login
+    if (result.rows.length === 0) {
+      try {
+        const adminRow = await pool.query('SELECT * FROM admins WHERE username = $1', [email]);
+        if (adminRow.rows.length > 0 && adminRow.rows[0].username !== (process.env.ADMIN_USERNAME || 'pirates')) {
+          const a = adminRow.rows[0];
+          // Copy the real password hash set by the super admin at creation time
+          await pool.query(
+            'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)',
+            [a.email || (a.username + '@admin.local'), a.username, a.password_hash]
+          );
+          console.log('Auto-healed missing users row for admin:', a.username);
+          result = await pool.query('SELECT * FROM users WHERE username = $1', [email]);
+        }
+      } catch (e) {
+        console.error('Admin auto-heal failed:', e.message);
+      }
+    }
 
     if (result.rows.length === 0) {
       console.log('Login failed: no user found for', email);

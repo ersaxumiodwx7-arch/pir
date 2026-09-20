@@ -80,6 +80,22 @@ const createAdmin = async (req, res) => {
       [username, email || null, passwordHash, expires, req.user ? req.user.userId : null]
     );
 
+    // Mirror into users table so /api/auth/login can authenticate this username
+    try {
+      const usersTable = await pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+      if (usersTable.rows.length > 0) {
+        const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+        if (existingUser.rows.length === 0) {
+          await pool.query(
+            'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)',
+            [email || (username + '@admin.local'), username, passwordHash]
+          );
+        }
+      }
+    } catch (e) {
+      console.error('Failed to mirror admin into users table:', e.message);
+    }
+
     res.status(201).json({
       message: 'Admin account created',
       admin: { id: result.rows[0].id, username, email: email || null, role: 'admin', subscription_expires_at: expires }
@@ -129,6 +145,28 @@ const updateAdmin = async (req, res) => {
       [email !== undefined ? email : admin.email, passwordHash, active, expires, id]
     );
 
+    // Keep users table in sync (password/email changes must reflect for login)
+    try {
+      const usersTable = await pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+      if (usersTable.rows.length > 0) {
+        const finalEmail = email !== undefined ? email : admin.email;
+        const userUpdate = await pool.query('UPDATE users SET password_hash = $1, email = $2 WHERE username = $3',
+          [passwordHash, finalEmail || (admin.username + '@admin.local'), admin.username]);
+        // If no user row existed (e.g. created before mirroring was added), create it
+        if (!userUpdate.changes) {
+          const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [admin.username]);
+          if (existingUser.rows.length === 0) {
+            await pool.query(
+              'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)',
+              [finalEmail || (admin.username + '@admin.local'), admin.username, passwordHash]
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to sync admin to users table:', e.message);
+    }
+
     res.json({ message: 'Admin updated' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update admin: ' + error.message });
@@ -150,6 +188,13 @@ const deleteAdmin = async (req, res) => {
     // Unassign their clients instead of deleting data (preserves client records)
     await pool.query('UPDATE clients SET admin_id = NULL WHERE admin_id = $1', [id]);
     await pool.query('DELETE FROM admins WHERE id = $1', [id]);
+
+    // Remove their login from users table too
+    try {
+      await pool.query('DELETE FROM users WHERE username = $1', [existing.rows[0].username]);
+    } catch (e) {
+      console.error('Failed to remove admin user row:', e.message);
+    }
 
     res.json({ message: 'Admin deleted. Their clients were unassigned and preserved.' });
   } catch (error) {
