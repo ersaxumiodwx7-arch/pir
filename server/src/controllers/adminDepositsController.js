@@ -26,10 +26,12 @@ const getAllDeposits = async (req, res) => {
     }
 
     const countResult = await pool.query(
-      `SELECT COUNT(*) FROM deposit_requests dr ${whereClause}`,
+      `SELECT COUNT(*) as total FROM deposit_requests dr
+       JOIN clients c ON dr.client_id = c.id
+       ${whereClause}`,
       params
     );
-    const totalCount = parseInt(countResult.rows[0].count);
+    const totalCount = parseInt(countResult.rows[0].total) || 0;
 
     params.push(parseInt(limit));
     params.push(offset);

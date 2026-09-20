@@ -14,7 +14,7 @@ function clientScope(req) {
 function applyScope(whereClause, params, scope) {
   if (!scope.clause) return { clause: whereClause, params };
   const next = [...params, scope.params[0]];
-  return { clause: whereClause + scope.clause.replace('$SCOPE$', next.length), params: next };
+  return { clause: whereClause + scope.clause.replace('$SCOPE$', '$' + next.length), params: next };
 }
 
 // Generate unique Case ID
@@ -51,8 +51,8 @@ const getAllClients = async (req, res) => {
     params.length = 0;
     params.push(...scoped.params);
 
-    const countResult = await pool.query(`SELECT COUNT(*) FROM clients ${whereClause}`, params);
-    const totalCount = parseInt(countResult.rows[0].count);
+    const countResult = await pool.query(`SELECT COUNT(*) as total FROM clients ${whereClause}`, params);
+    const totalCount = parseInt(countResult.rows[0].total) || 0;
 
     params.push(parseInt(limit));
     params.push(offset);
