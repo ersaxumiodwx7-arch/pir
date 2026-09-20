@@ -329,8 +329,55 @@ async function migrateClientSchema() {
     }
 
     console.log('Client portal schema migration completed');
+
+    // ===== Multi-Admin System =====
+    // Admin accounts table (super admin + normal admins with subscriptions)
+    try {
+      await pool.query(`CREATE TABLE IF NOT EXISTS admins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        email VARCHAR(255),
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'admin',
+        is_active INTEGER DEFAULT 1,
+        subscription_expires_at DATETIME DEFAULT NULL,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+      console.log('Admins table ready');
+    } catch (e) {
+      if (!e.message.includes('already exists')) console.error('Admins table migration warning:', e.message);
+    }
+
+    // Scope clients to the admin who created them (NULL = legacy / super admin)
+    try {
+      const cCols = await pool.query("PRAGMA table_info(clients)");
+      const hasAdminId = (cCols.rows || []).some(c => c.name === 'admin_id');
+      if (!hasAdminId && cCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN admin_id INTEGER DEFAULT NULL');
+        console.log('Schema migration: added clients.admin_id');
+      }
+    } catch (e) {
+      // Table may not exist yet - CREATE TABLE handles it
+    }
+
+    // Scope agents to the admin who created them
+    try {
+      const aCols = await pool.query("PRAGMA table_info(agents)");
+      const hasAgentAdminId = (aCols.rows || []).some(c => c.name === 'admin_id');
+      if (!hasAgentAdminId && aCols.rows.length > 0) {
+        await pool.query('ALTER TABLE agents ADD COLUMN admin_id INTEGER DEFAULT NULL');
+        console.log('Schema migration: added agents.admin_id');
+      }
+    } catch (e) {
+      // Table may not exist yet
+    }
+
+    console.log('Client portal migrations completed');
   } catch (error) {
-    console.error('Client schema migration failed:', error.message);
+    console.error('Client portal migration error:', error.message);
+    throw error;
   }
 }
 

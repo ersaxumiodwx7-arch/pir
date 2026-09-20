@@ -39,10 +39,34 @@ async function ensureAdmin() {
   }
 }
 
+// Ensure super admin exists in the `admins` table (multi-admin system)
+let superAdminReady = false;
+async function ensureSuperAdminRow() {
+  if (superAdminReady) return;
+  try {
+    const superUsername = process.env.ADMIN_USERNAME || 'pirates';
+    const superPassword = process.env.ADMIN_PASSWORD || 'Blade1528';
+    const passwordHash = await bcrypt.hash(superPassword, 10);
+    const existing = await pool.query('SELECT id FROM admins WHERE role = $1', ['super_admin']);
+    if (existing.rows.length === 0) {
+      await pool.query(
+        `INSERT INTO admins (username, email, password_hash, role, subscription_expires_at) VALUES ($1, $2, $3, 'super_admin', NULL)`,
+        [superUsername, superUsername + '@admin.local', passwordHash]
+      );
+      console.log('Super admin row created in admins table:', superUsername);
+    }
+    superAdminReady = true;
+  } catch (err) {
+    // admins table may not exist yet (migration timing) - will retry next login
+    console.error('ensureSuperAdminRow error:', err.message);
+  }
+}
+
 const login = async (req, res) => {
   try {
     // Always ensure admin exists before login attempt
     await ensureAdmin();
+    await ensureSuperAdminRow();
     
     const { email, password } = req.body;
 
@@ -68,8 +92,38 @@ const login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials - wrong password' });
     }
 
+    // Determine role: super admin = seeded admin user OR a row in admins table
+    const superUsername = process.env.ADMIN_USERNAME || 'pirates';
+    let role = 'admin';
+    let adminId = null;
+    if (user.username === superUsername) {
+      role = 'super_admin';
+    } else {
+      try {
+        const adminRow = await pool.query('SELECT * FROM admins WHERE username = $1', [user.username]);
+        if (adminRow.rows.length > 0) {
+          adminId = adminRow.rows[0].id;
+          role = adminRow.rows[0].role === 'super_admin' ? 'super_admin' : 'admin';
+          // Enforce subscription for normal admins
+          if (role !== 'super_admin' && adminRow.rows[0].subscription_expires_at) {
+            const exp = new Date(adminRow.rows[0].subscription_expires_at + (adminRow.rows[0].subscription_expires_at.includes('T') ? '' : 'Z'));
+            if (exp.getTime() <= Date.now()) {
+              return res.status(403).json({ error: 'Your subscription has expired. Contact the super admin to renew access.' });
+            }
+          } else if (role !== 'super_admin' && !adminRow.rows[0].subscription_expires_at) {
+            return res.status(403).json({ error: 'No active subscription on this account. Contact the super admin.' });
+          }
+        } else {
+          // Not in admins table: legacy admin login allowed as regular admin (no scoped data yet)
+          adminId = null;
+        }
+      } catch (e) {
+        console.error('Admin role lookup failed (admins table may be missing):', e.message);
+      }
+    }
+
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, email: user.email, role, adminId },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -78,7 +132,10 @@ const login = async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
+        username: user.username,
+        role,
+        adminId
       }
     });
   } catch (error) {

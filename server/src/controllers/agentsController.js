@@ -29,6 +29,12 @@ const getAllAgents = async (req, res) => {
       whereClause += ' AND is_active = 0';
     }
 
+    // Scope: normal admins only see their own agents
+    if (req.user && req.user.role !== 'super_admin' && req.user.adminId) {
+      params.push(req.user.adminId);
+      whereClause += ` AND admin_id = $${params.length}`;
+    }
+
     const result = await pool.query(
       `SELECT * FROM agents ${whereClause} ORDER BY created_at DESC`,
       params
@@ -77,9 +83,10 @@ const createAgent = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO agents (agent_id, full_name, designation, department, phone, email, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [agentId, full_name, designation, department || null, phone || null, email || null, req.user.userId]
+      `INSERT INTO agents (agent_id, full_name, designation, department, phone, email, created_by, admin_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [agentId, full_name, designation, department || null, phone || null, email || null, req.user.userId,
+       req.user.role === 'super_admin' ? null : (req.user.adminId || null)]
     );
 
     res.status(201).json(result.rows[0]);

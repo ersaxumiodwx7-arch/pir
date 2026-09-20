@@ -526,7 +526,7 @@ const ClientDeposit = () => {
                       )}
                       {selectedMethod?.recipient_address && (
                         <div className="pickup-info-row">
-                          <span className="pickup-info-label">Recipient Address</span>
+                          <span className="pickup-info-label">Shipping Address</span>
                           <span className="pickup-info-value pickup-location-value">{selectedMethod.recipient_address}</span>
                         </div>
                       )}

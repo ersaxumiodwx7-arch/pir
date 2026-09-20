@@ -164,6 +164,7 @@ app.use('/api/upload', require('./routes/upload'));
 app.use('/api/admin/clients', require('./routes/adminClients'));
 app.use('/api/admin/agents', require('./routes/agents'));
 app.use('/api/admin/deposits', require('./routes/adminDeposits'));
+app.use('/api/superadmin', require('./routes/superAdmin'));
 app.use('/api/client', require('./routes/clientPortal'));
 app.use('/api/client/deposits', require('./routes/clientDeposits'));
 

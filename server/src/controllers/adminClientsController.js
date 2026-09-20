@@ -1,6 +1,22 @@
 const pool = require('../database/connection');
 const bcrypt = require('bcryptjs');
 
+// Scope helper: normal admins only see their own clients; super admin sees all
+// Returns { clause, params } to append to a clients WHERE clause
+function clientScope(req) {
+  if (req.user && req.user.role === 'super_admin') return { clause: '', params: [] };
+  if (req.user && req.user.adminId) return { clause: ' AND admin_id = $SCOPE$', params: [req.user.adminId] };
+  // Legacy admin token (no adminId): fall back to unscoped for compatibility
+  return { clause: '', params: [] };
+}
+
+// Renumber $SCOPE$ placeholder against existing params
+function applyScope(whereClause, params, scope) {
+  if (!scope.clause) return { clause: whereClause, params };
+  const next = [...params, scope.params[0]];
+  return { clause: whereClause + scope.clause.replace('$SCOPE$', next.length), params: next };
+}
+
 // Generate unique Case ID
 function generateCaseId() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -30,6 +46,11 @@ const getAllClients = async (req, res) => {
       whereClause += ` AND account_status = $${params.length}`;
     }
 
+    const scoped = applyScope(whereClause, params, clientScope(req));
+    whereClause = scoped.clause;
+    params.length = 0;
+    params.push(...scoped.params);
+
     const countResult = await pool.query(`SELECT COUNT(*) FROM clients ${whereClause}`, params);
     const totalCount = parseInt(countResult.rows[0].count);
 
@@ -45,7 +66,14 @@ const getAllClients = async (req, res) => {
       params
     );
 
-    // Get summary stats
+    // Get summary stats (scoped)
+    const scope = clientScope(req);
+    let statsWhere = 'WHERE 1=1';
+    const statsParams = [];
+    if (scope.clause) {
+      statsParams.push(scope.params[0]);
+      statsWhere += ' AND admin_id = $1';
+    }
     const statsResult = await pool.query(`
       SELECT
         COUNT(*) as total,
@@ -53,8 +81,8 @@ const getAllClients = async (req, res) => {
         COUNT(CASE WHEN account_status = 'suspended' THEN 1 END) as suspended,
         COUNT(CASE WHEN account_status = 'closed' THEN 1 END) as closed,
         COALESCE(SUM(display_balance), 0) as total_balance
-      FROM clients
-    `);
+      FROM clients ${statsWhere}
+    `, statsParams);
 
     res.json({
       clients: result.rows,
@@ -88,6 +116,11 @@ const getClient = async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Scope check: normal admins can't view other admins' clients
+    if (req.user && req.user.role !== 'super_admin' && req.user.adminId && result.rows[0].admin_id !== req.user.adminId) {
+      return res.status(403).json({ error: 'Access denied' });
     }
 
     const client = result.rows[0];
@@ -137,11 +170,12 @@ const createClient = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO clients (case_id, password_hash, full_name, email, phone, account_status, display_balance, account_type, address, date_of_birth, ssn_last4, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+      `INSERT INTO clients (case_id, password_hash, full_name, email, phone, account_status, display_balance, account_type, address, date_of_birth, ssn_last4, created_by, admin_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
       [caseId, passwordHash, full_name, email || null, phone || null,
        account_status || 'active', display_balance || 0, account_type || 'standard',
-       address || null, date_of_birth || null, ssn_last4 || null, req.user.userId]
+       address || null, date_of_birth || null, ssn_last4 || null, req.user.userId,
+       req.user.role === 'super_admin' ? null : (req.user.adminId || null)]
     );
 
     const client = result.rows[0];
@@ -204,6 +238,11 @@ const updateClient = async (req, res) => {
       return res.status(404).json({ error: 'Client not found' });
     }
 
+    // Scope check
+    if (req.user && req.user.role !== 'super_admin' && req.user.adminId && result.rows[0].admin_id !== req.user.adminId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const client = result.rows[0];
     delete client.password_hash;
 
@@ -218,10 +257,15 @@ const updateClient = async (req, res) => {
 const deleteClient = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM clients WHERE id = $1 RETURNING id', [id]);
-    if (result.rows.length === 0) {
+    // Scope check before deleting
+    const existing = await pool.query('SELECT admin_id FROM clients WHERE id = $1', [id]);
+    if (existing.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
+    if (req.user && req.user.role !== 'super_admin' && req.user.adminId && existing.rows[0].admin_id !== req.user.adminId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    await pool.query('DELETE FROM clients WHERE id = $1 RETURNING id', [id]);
     res.json({ message: 'Client deleted' });
   } catch (error) {
     console.error('Delete client error:', error);

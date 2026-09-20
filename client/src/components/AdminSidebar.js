@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import './AdminSidebar.css';
 
-const NAV_SECTIONS = [
+const NAV_SECTIONS = (isSuperAdmin) => [
   {
     label: 'Main',
     items: [
@@ -25,10 +25,17 @@ const NAV_SECTIONS = [
     items: [
       { path: '/admin/clients', icon: UsersIcon, label: 'Client Accounts' },
       { path: '/admin/agents', icon: CreditCardIcon, label: 'Agent Management' },
-      { path: '/admin/deposit-methods', icon: SettingsIcon, label: 'Deposit Methods' },
       { path: '/admin/deposits', icon: CreditCardIcon, label: 'Deposit Requests' },
     ],
   },
+  ...(isSuperAdmin ? [
+    {
+      label: 'Super Admin',
+      items: [
+        { path: '/superadmin/accounts', icon: SettingsIcon, label: 'Admin Accounts' },
+      ],
+    },
+  ] : []),
   {
     label: 'Security',
     items: [
@@ -40,7 +47,8 @@ const NAV_SECTIONS = [
 const AdminSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isSuperAdmin = user?.role === 'super_admin';
 
   const isActive = (path) => {
     if (path === '/dashboard') return location.pathname === '/dashboard';
@@ -58,7 +66,7 @@ const AdminSidebar = () => {
       </div>
 
       <nav className="admin-sidebar-nav">
-        {NAV_SECTIONS.map((section) => (
+        {NAV_SECTIONS(isSuperAdmin).map((section) => (
           <React.Fragment key={section.label}>
             <div className="admin-sidebar-section-label">{section.label}</div>
             {section.items.map((item) => (

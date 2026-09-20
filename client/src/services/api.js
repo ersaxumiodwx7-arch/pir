@@ -138,6 +138,14 @@ export const adminDepositMethodsAPI = {
   toggle: (id) => api.patch(`/admin/deposits/methods/${id}/toggle`),
 };
 
+// Super Admin API (admin account management)
+export const superAdminAPI = {
+  list: () => api.get('/superadmin/admins'),
+  create: (data) => api.post('/superadmin/admins', data),
+  update: (id, data) => api.put(`/superadmin/admins/${id}`, data),
+  delete: (id) => api.delete(`/superadmin/admins/${id}`),
+};
+
 // Admin Deposits API
 export const adminDepositsAPI = {
   getAll: (params) => api.get('/admin/deposits/requests', { params }),

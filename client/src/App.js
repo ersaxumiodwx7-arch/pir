@@ -20,6 +20,7 @@ import AdminClientDetail from './pages/AdminClientDetail';
 import AdminAgents from './pages/AdminAgents';
 import AdminDepositMethods from './pages/AdminDepositMethods';
 import AdminDeposits from './pages/AdminDeposits';
+import AdminAccounts from './pages/AdminAccounts';
 import ClientDeposit from './pages/ClientDeposit';
 import ClientTransfer from './pages/ClientTransfer';
 import NotFound from './pages/NotFound';
@@ -153,6 +154,13 @@ function App() {
             <Route path="/admin/deposits" element={
               <ProtectedRoute>
                 <AdminDeposits />
+              </ProtectedRoute>
+            } />
+
+            {/* Super Admin - account management */}
+            <Route path="/superadmin/accounts" element={
+              <ProtectedRoute>
+                <AdminAccounts />
               </ProtectedRoute>
             } />
 

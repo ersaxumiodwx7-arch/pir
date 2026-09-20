@@ -19,6 +19,12 @@ const getAllDeposits = async (req, res) => {
       whereClause += ` AND dr.client_id = $${params.length}`;
     }
 
+    // Scope: normal admins only see deposits of their own clients
+    if (req.user && req.user.role !== 'super_admin' && req.user.adminId) {
+      params.push(req.user.adminId);
+      whereClause += ` AND c.admin_id = $${params.length}`;
+    }
+
     const countResult = await pool.query(
       `SELECT COUNT(*) FROM deposit_requests dr ${whereClause}`,
       params
@@ -62,7 +68,7 @@ const getDeposit = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT dr.*, c.case_id, c.full_name as client_name, c.email as client_email,
+      `SELECT dr.*, c.case_id, c.admin_id, c.full_name as client_name, c.email as client_email,
               COALESCE(dm.method_name, cdm.method_name) as method_name, COALESCE(dm.method_type, cdm.method_type) as method_type,
               COALESCE(dm.instructions, cdm.instructions) as instructions, COALESCE(dm.recipient_name, cdm.recipient_name) as recipient_name,
               COALESCE(dm.account_details, cdm.account_number) as account_details
@@ -76,6 +82,13 @@ const getDeposit = async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Deposit request not found' });
+    }
+
+    // Scope check: normal admins can't view other admins' client deposits
+    if (req.user && req.user.role !== 'super_admin' && req.user.adminId) {
+      if (result.rows[0].admin_id !== req.user.adminId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
     }
 
     res.json(result.rows[0]);
