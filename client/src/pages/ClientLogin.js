@@ -33,7 +33,7 @@ const ClientLogin = () => {
       navigate('/client/dashboard');
     } else {
       // Generic message only - never reveal which field was wrong
-      setLoginError('Incorrect Case ID or password');
+      setLoginError('Incorrect Case ID/username or password');
       // Clear only the password; keep the Case ID so the user can retry quickly
       setPassword('');
     }
@@ -193,12 +193,12 @@ const ClientLogin = () => {
               <form onSubmit={handleSubmit} className="banking-login-form">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Case ID</label>
+                    <label>Case ID or Username</label>
                     <input
                       type="text"
                       value={caseId}
-                      onChange={(e) => setCaseId(e.target.value.toUpperCase())}
-                      placeholder="e.g. CS-A1B2C3D4"
+                      onChange={(e) => setCaseId(e.target.value)}
+                      placeholder="CS-A1B2C3D4 or username"
                       required
                       autoFocus
                     />

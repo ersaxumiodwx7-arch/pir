@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS clients (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   case_id VARCHAR(20) UNIQUE NOT NULL,
+  username VARCHAR(100) UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   full_name VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE,
@@ -232,6 +233,7 @@ CREATE TABLE IF NOT EXISTS deposit_requests (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_clients_case_id ON clients(case_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_username ON clients(username);
 CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
 CREATE INDEX IF NOT EXISTS idx_client_transactions_client_id ON client_transactions(client_id);
 CREATE INDEX IF NOT EXISTS idx_client_documents_client_id ON client_documents(client_id);

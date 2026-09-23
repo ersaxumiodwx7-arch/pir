@@ -12,7 +12,7 @@ const AdminClients = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newClient, setNewClient] = useState({
-    full_name: '', email: '', phone: '', password: '',
+    full_name: '', email: '', phone: '', password: '', username: '',
     display_balance: '0.00', account_status: 'active', account_type: 'standard',
     account_number: '', routing_number: ''
   });
@@ -40,10 +40,17 @@ const AdminClients = () => {
     e.preventDefault();
     setCreating(true);
     try {
-      await adminClientsAPI.create(newClient);
-      toast.success('Client created successfully');
+      const response = await adminClientsAPI.create(newClient);
+      const created = response.data;
+      const signInId = created.username || created.case_id;
+      toast.success(
+        created.username
+          ? `Client created — sign-in ID: ${signInId}`
+          : `Client created — auto-generated sign-in ID (Case ID): ${signInId}`,
+        { duration: 8000 }
+      );
       setShowCreateModal(false);
-      setNewClient({ full_name: '', email: '', phone: '', password: '', display_balance: '0.00', account_status: 'active', account_type: 'standard', account_number: '', routing_number: '' });
+      setNewClient({ full_name: '', email: '', phone: '', password: '', username: '', display_balance: '0.00', account_status: 'active', account_type: 'standard', account_number: '', routing_number: '' });
       loadClients();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create client');
@@ -231,6 +238,11 @@ const AdminClients = () => {
                 <div className="admin-form-field">
                   <label>Phone</label>
                   <input type="tel" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} placeholder="(555) 123-4567" />
+                </div>
+                <div className="admin-form-field">
+                  <label>Username (optional)</label>
+                  <input type="text" value={newClient.username} onChange={(e) => setNewClient({...newClient, username: e.target.value})} placeholder="Leave empty to auto-generate Case ID" />
+                  <small style={{ fontSize: '11px', color: '#64748b' }}>If empty, a Case ID (CS-XXXXXXXX) is auto-generated as the sign-in ID</small>
                 </div>
                 <div className="admin-form-field">
                   <label>Password *</label>

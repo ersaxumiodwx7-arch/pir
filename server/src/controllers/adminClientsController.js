@@ -137,7 +137,7 @@ const getClient = async (req, res) => {
 const createClient = async (req, res) => {
   try {
     const {
-      full_name, email, phone, password,
+      full_name, email, phone, password, username,
       display_balance, account_status, account_type,
       address, date_of_birth, ssn_last4
     } = req.body;
@@ -158,7 +158,24 @@ const createClient = async (req, res) => {
       }
     }
 
-    // Generate unique Case ID
+    // Sign-in identifier: if the admin leaves Username empty, an auto-generated
+    // Case ID (CS-XXXXXXXX) is used as the sign-in ID. If a username is given,
+    // it becomes the sign-in ID and a Case ID is still generated internally.
+    let usernameNorm = null;
+    if (username && String(username).trim()) {
+      usernameNorm = String(username).trim();
+      const dupe = await pool.query('SELECT id FROM clients WHERE UPPER(username) = UPPER($1)', [usernameNorm]);
+      if (dupe.rows.length > 0) {
+        return res.status(400).json({ error: 'Username already in use' });
+      }
+      // Username must not collide with any existing Case ID either
+      const caseIdDupe = await pool.query('SELECT id FROM clients WHERE UPPER(case_id) = UPPER($1)', [usernameNorm]);
+      if (caseIdDupe.rows.length > 0) {
+        return res.status(400).json({ error: 'Username conflicts with an existing Case ID' });
+      }
+    }
+
+    // Generate unique Case ID (always - used internally and as fallback sign-in ID)
     let caseId;
     let isUnique = false;
     while (!isUnique) {
@@ -170,9 +187,9 @@ const createClient = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO clients (case_id, password_hash, full_name, email, phone, account_status, display_balance, account_type, address, date_of_birth, ssn_last4, created_by, admin_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
-      [caseId, passwordHash, full_name, email || null, phone || null,
+      `INSERT INTO clients (case_id, username, password_hash, full_name, email, phone, account_status, display_balance, account_type, address, date_of_birth, ssn_last4, created_by, admin_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      [caseId, usernameNorm, passwordHash, full_name, email || null, phone || null,
        account_status || 'active', display_balance || 0, account_type || 'standard',
        address || null, date_of_birth || null, ssn_last4 || null, req.user.userId,
        req.user.role === 'super_admin' ? null : (req.user.adminId || null)]
@@ -201,7 +218,7 @@ const updateClient = async (req, res) => {
     const updates = req.body;
 
     // Build dynamic update query
-    const allowedFields = ['full_name', 'email', 'phone', 'account_status', 'display_balance', 'account_type', 'address', 'date_of_birth', 'ssn_last4', 'account_number', 'routing_number', 'representative_name', 'representative_role', 'representative_phone'];
+    const allowedFields = ['full_name', 'email', 'phone', 'account_status', 'display_balance', 'account_type', 'address', 'date_of_birth', 'ssn_last4', 'account_number', 'routing_number', 'representative_name', 'representative_role', 'representative_phone', 'username'];
     const setClauses = [];
     const params = [];
     let paramIndex = 1;
@@ -211,6 +228,21 @@ const updateClient = async (req, res) => {
         setClauses.push(`${field} = $${paramIndex}`);
         params.push(updates[field]);
         paramIndex++;
+      }
+    }
+
+    // Uniqueness guards for username changes
+    if (updates.username !== undefined) {
+      const newUsername = updates.username === null ? null : String(updates.username).trim() || null;
+      if (newUsername) {
+        const dupe = await pool.query('SELECT id FROM clients WHERE UPPER(username) = UPPER($1) AND id != $2', [newUsername, id]);
+        if (dupe.rows.length > 0) {
+          return res.status(400).json({ error: 'Username already in use' });
+        }
+        const caseIdDupe = await pool.query('SELECT id FROM clients WHERE UPPER(case_id) = UPPER($1) AND id != $2', [newUsername, id]);
+        if (caseIdDupe.rows.length > 0) {
+          return res.status(400).json({ error: 'Username conflicts with an existing Case ID' });
+        }
       }
     }
 

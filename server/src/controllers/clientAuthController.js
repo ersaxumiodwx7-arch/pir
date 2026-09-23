@@ -11,12 +11,15 @@ const clientLogin = async (req, res) => {
     const { case_id, password } = req.body;
 
     if (!case_id || !password) {
-      return res.status(400).json({ error: 'Case ID and password are required' });
+      return res.status(400).json({ error: 'Case ID/username and password are required' });
     }
 
+    // Accept either the auto-generated Case ID (CS-XXXXXXXX) or a custom username.
+    // Input is matched case-insensitively against both columns (SQLite stores as given).
+    const identifier = String(case_id).trim();
     const result = await pool.query(
-      'SELECT * FROM clients WHERE case_id = $1',
-      [case_id.toUpperCase()]
+      'SELECT * FROM clients WHERE UPPER(case_id) = UPPER($1) OR (username IS NOT NULL AND UPPER(username) = UPPER($2))',
+      [identifier, identifier]
     );
 
     if (result.rows.length === 0) {

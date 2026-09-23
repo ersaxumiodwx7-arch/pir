@@ -401,6 +401,7 @@ const AdminClientDetail = () => {
           <div className="admin-form-grid">
             {[
               { key: 'full_name', label: 'Full Name', type: 'text' },
+              { key: 'username', label: 'Username (sign-in ID)', type: 'text' },
               { key: 'email', label: 'Email', type: 'email' },
               { key: 'phone', label: 'Phone', type: 'tel' },
               { key: 'display_balance', label: 'Display Balance', type: 'number' },
@@ -467,6 +468,7 @@ const AdminClientDetail = () => {
 
           <div className="admin-detail-meta">
             <span>Case ID: <strong>{client.case_id}</strong></span>
+            <span>Sign-in ID: <strong>{client.username || client.case_id}</strong></span>
             <span>Created: {formatDate(client.created_at)}</span>
             <span>Last Login: {client.last_login_at ? formatDateTime(client.last_login_at) : 'Never'}</span>
           </div>

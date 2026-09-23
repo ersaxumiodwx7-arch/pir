@@ -330,6 +330,19 @@ async function migrateClientSchema() {
 
     console.log('Client portal schema migration completed');
 
+    // Ensure username column exists on clients (alternative sign-in to auto-generated Case ID)
+    try {
+      const clientColsU = await pool.query("PRAGMA table_info(clients)");
+      const hasUsername = (clientColsU.rows || []).some(c => c.name === 'username');
+      if (!hasUsername && clientColsU.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN username VARCHAR(100)');
+        await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_username ON clients(username)');
+        console.log('Schema migration: added clients.username (unique)');
+      }
+    } catch (e) {
+      // Table may not exist yet - CREATE TABLE handles it
+    }
+
     // Ensure representative columns exist on clients (assigned case representative)
     try {
       const clientCols2 = await pool.query("PRAGMA table_info(clients)");
