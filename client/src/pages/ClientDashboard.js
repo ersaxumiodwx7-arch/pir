@@ -59,35 +59,6 @@ const ClientDashboard = () => {
     }
   };
 
-  const loadPickupMethod = async () => {
-    try {
-      const response = await clientPortalAPI.getDepositMethods();
-      const methods = response.data.methods || [];
-      const pickup = methods.find(m => m.method_type === 'pickup');
-      setPickupMethod(pickup || null);
-    } catch (error) {
-      console.error('Failed to load pickup method:', error);
-    }
-  };
-
-  const getTrackingStatusLabel = (status) => {
-    switch (status) {
-      case 'on_the_way': return '🚚 On The Way';
-      case 'picked': return '✅ Picked Up';
-      case 'secured': return '🔒 Secured — Complete';
-      default: return '📦 Scheduled';
-    }
-  };
-
-  const getTrackingStatusColor = (status) => {
-    switch (status) {
-      case 'on_the_way': return '#f59e0b';
-      case 'picked': return '#3b82f6';
-      case 'secured': return '#10b981';
-      default: return '#64748b';
-    }
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
   };

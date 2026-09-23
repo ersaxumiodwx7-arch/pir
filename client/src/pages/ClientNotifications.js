@@ -8,11 +8,8 @@ import './ClientPages.css';
 const ClientNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-<<<<<<< HEAD
-=======
   const [error, setError] = useState(null);
   const [markingAll, setMarkingAll] = useState(false);
->>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
   const navigate = useNavigate();
 
   useEffect(() => { loadNotifications(); }, []);

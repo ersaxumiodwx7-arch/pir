@@ -805,8 +805,6 @@
 .client-dashboard-tracking-widget:hover .client-dashboard-tracking-footer {
   color: #60a5fa;
 }
-<<<<<<< HEAD
-=======
 
 /* ============================================
    Your Representative Card
@@ -966,4 +964,4 @@
   background: #eff6ff;
   border-color: #bfdbfe;
 }
->>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
+

@@ -100,12 +100,8 @@ const login = async (req, res) => {
 
     if (result.rows.length === 0) {
       console.log('Login failed: no user found for', email);
-<<<<<<< HEAD
-      return res.status(401).json({ error: 'Invalid credentials - user not found' });
-=======
       // Generic message - never reveal whether the account or password was wrong
       return res.status(401).json({ error: 'Incorrect email or password' });
->>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
     }
 
     const user = result.rows[0];
@@ -114,12 +110,8 @@ const login = async (req, res) => {
     console.log('Password valid:', isValidPassword);
 
     if (!isValidPassword) {
-<<<<<<< HEAD
-      return res.status(401).json({ error: 'Invalid credentials - wrong password' });
-=======
       // Generic message - never reveal whether the account or password was wrong
       return res.status(401).json({ error: 'Incorrect email or password' });
->>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
     }
 
     // Determine role: super admin = seeded admin user OR a row in admins table

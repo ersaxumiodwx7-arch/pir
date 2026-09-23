@@ -330,8 +330,6 @@ async function migrateClientSchema() {
 
     console.log('Client portal schema migration completed');
 
-<<<<<<< HEAD
-=======
     // Ensure representative columns exist on clients (assigned case representative)
     try {
       const clientCols2 = await pool.query("PRAGMA table_info(clients)");
@@ -354,7 +352,6 @@ async function migrateClientSchema() {
       // Table may not exist yet - CREATE TABLE handles it
     }
 
->>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
     // ===== Multi-Admin System =====
     // Admin accounts table (super admin + normal admins with subscriptions)
     try {

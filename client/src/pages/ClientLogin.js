@@ -184,15 +184,12 @@ const ClientLogin = () => {
                   assigned Recovery Specialist.
                 </p>
               </div>
-<<<<<<< HEAD
-=======
               {loginError && (
                 <div className="login-error-banner" role="alert">
                   <XCircleIcon size={16} />
                   {loginError}
                 </div>
               )}
->>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
               <form onSubmit={handleSubmit} className="banking-login-form">
                 <div className="form-row">
                   <div className="form-group">
