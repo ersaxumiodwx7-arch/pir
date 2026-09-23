@@ -9,6 +9,7 @@ const ClientLogin = () => {
   const [caseId, setCaseId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [showForgot, setShowForgot] = useState(false);
   const [resetCaseId, setResetCaseId] = useState('');
   const [resetEmail, setResetEmail] = useState('');
@@ -23,6 +24,7 @@ const ClientLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError('');
 
     const result = await login(caseId, password);
     
@@ -30,7 +32,10 @@ const ClientLogin = () => {
       toast.success('Welcome back!');
       navigate('/client/dashboard');
     } else {
-      toast.error(result.error);
+      // Generic message only - never reveal which field was wrong
+      setLoginError('Incorrect Case ID or password');
+      // Clear only the password; keep the Case ID so the user can retry quickly
+      setPassword('');
     }
     
     setLoading(false);
@@ -142,14 +147,13 @@ const ClientLogin = () => {
           </div>
           
           <h1 className="hero-title">
-            Banking that<br />
-            works <em>for you</em>
+            Your Accounts &amp; Claims,<br />
+            Secured in <em>One Place.</em>
           </h1>
           
           <p className="hero-description">
-            Experience the future of banking with FDIC. Smart tools, premium
-            rewards, and industry-leading security to help you achieve your
-            financial goals.
+            Secure your financial and legal records with end-to-end encryption.
+            Easily track claims, monitor account activity.
           </p>
           
           <div className="hero-trust-indicators">
@@ -180,6 +184,15 @@ const ClientLogin = () => {
                   assigned Recovery Specialist.
                 </p>
               </div>
+<<<<<<< HEAD
+=======
+              {loginError && (
+                <div className="login-error-banner" role="alert">
+                  <XCircleIcon size={16} />
+                  {loginError}
+                </div>
+              )}
+>>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
               <form onSubmit={handleSubmit} className="banking-login-form">
                 <div className="form-row">
                   <div className="form-group">

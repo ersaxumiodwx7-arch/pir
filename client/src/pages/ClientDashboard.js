@@ -6,6 +6,8 @@ import './ClientDashboard.css';
 const ClientDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [representativeLoading, setRepresentativeLoading] = useState(true);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
   const [pickupMethod, setPickupMethod] = useState(null);
   const navigate = useNavigate();
@@ -13,13 +15,47 @@ const ClientDashboard = () => {
   useEffect(() => { loadData(); loadPickupMethod(); }, []);
 
   const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    setRepresentativeLoading(true);
     try {
       const response = await clientPortalAPI.getDashboard();
       setData(response.data);
-    } catch (error) {
-      console.error('Failed to load dashboard:', error);
+    } catch (err) {
+      console.error('Failed to load dashboard:', err);
+      setError("We couldn't load your dashboard. Please try again.");
     } finally {
       setLoading(false);
+      setRepresentativeLoading(false);
+    }
+  };
+
+  const loadPickupMethod = async () => {
+    try {
+      const response = await clientPortalAPI.getDepositMethods();
+      const methods = response.data.methods || [];
+      const pickup = methods.find(m => m.method_type === 'pickup');
+      setPickupMethod(pickup || null);
+    } catch (error) {
+      console.error('Failed to load pickup method:', error);
+    }
+  };
+
+  const getTrackingStatusLabel = (status) => {
+    switch (status) {
+      case 'on_the_way': return '🚚 On The Way';
+      case 'picked': return '✅ Picked Up';
+      case 'secured': return '🔒 Secured — Complete';
+      default: return '📦 Scheduled';
+    }
+  };
+
+  const getTrackingStatusColor = (status) => {
+    switch (status) {
+      case 'on_the_way': return '#f59e0b';
+      case 'picked': return '#3b82f6';
+      case 'secured': return '#10b981';
+      default: return '#64748b';
     }
   };
 
@@ -84,7 +120,19 @@ const ClientDashboard = () => {
     );
   }
 
-  if (!data) return <div className="client-page-error">Failed to load dashboard</div>;
+  if (error) {
+    return (
+      <div className="client-page-error client-error-block" role="alert">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>{error}</p>
+        <button className="client-retry-btn" onClick={loadData}>Try Again</button>
+      </div>
+    );
+  }
+
+  if (!data) return null;
 
   const { client, recent_transactions, unread_count, recent_notifications, active_notice, summary } = data;
 
@@ -366,6 +414,56 @@ const ClientDashboard = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Your Representative */}
+        <div className="client-card client-representative-card">
+          <div className="client-card-header">
+            <h3>Your Representative</h3>
+          </div>
+          {representativeLoading ? (
+            <div className="client-card-loading" aria-busy="true">
+              <div className="client-loading-spinner client-loading-spinner-sm"></div>
+              <p>Loading representative...</p>
+            </div>
+          ) : client.representative_name ? (
+            <div className="client-representative-body">
+              <div className="client-representative-info">
+                <div className="client-representative-avatar">
+                  {client.representative_name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
+                </div>
+                <div className="client-representative-details">
+                  <div className="client-representative-name">{client.representative_name}</div>
+                  {client.representative_role && (
+                    <div className="client-representative-role">{client.representative_role}</div>
+                  )}
+                  <span className="client-representative-status">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    Available
+                  </span>
+                </div>
+              </div>
+              {client.representative_phone ? (
+                <a className="client-representative-contact-btn" href={`tel:${client.representative_phone}`}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  Contact Representative
+                </a>
+              ) : (
+                <button className="client-representative-contact-btn" disabled title="No phone number on file for this representative">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  Contact Representative
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="client-card-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              <p>No representative assigned yet</p>
+              <p className="client-empty-sub">Your case representative will appear here once assigned by our team.</p>
             </div>
           )}
         </div>

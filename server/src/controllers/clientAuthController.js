@@ -20,7 +20,8 @@ const clientLogin = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid Case ID or password' });
+      // Generic message - never reveal whether the Case ID or password was wrong
+      return res.status(401).json({ error: 'Incorrect Case ID or password' });
     }
 
     const client = result.rows[0];
@@ -35,7 +36,8 @@ const clientLogin = async (req, res) => {
 
     const isValidPassword = await bcrypt.compare(password, client.password_hash);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid Case ID or password' });
+      // Generic message - never reveal whether the Case ID or password was wrong
+      return res.status(401).json({ error: 'Incorrect Case ID or password' });
     }
 
     // Update last login

@@ -5,12 +5,14 @@ import './ClientPages.css';
 const ClientTransactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ type: '', status: '', from_date: '', to_date: '' });
 
   useEffect(() => { loadTransactions(); }, [filters]);
 
   const loadTransactions = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = {};
       if (filters.type) params.type = filters.type;
@@ -19,8 +21,9 @@ const ClientTransactions = () => {
       if (filters.to_date) params.to_date = filters.to_date;
       const response = await clientPortalAPI.getTransactions(params);
       setTransactions(response.data);
-    } catch (error) {
-      console.error('Failed to load transactions:', error);
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+      setError("We couldn't load your transactions. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -88,14 +91,22 @@ const ClientTransactions = () => {
       {/* Transactions Table */}
       <div className="client-card">
         {loading ? (
-          <div className="client-page-loading"><div className="client-loading-spinner"></div></div>
+          <div className="client-page-loading"><div className="client-loading-spinner"></div><p>Loading transactions...</p></div>
+        ) : error ? (
+          <div className="client-error-block" role="alert">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>{error}</p>
+            <button className="client-retry-btn" onClick={loadTransactions}>Try Again</button>
+          </div>
         ) : transactions.length === 0 ? (
           <div className="client-card-empty">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
               <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
             <h3>No transactions found</h3>
-            <p>Transaction history will appear here</p>
+            <p>{filters.type || filters.status || filters.from_date || filters.to_date ? 'No transactions match your filters. Try clearing them.' : 'Transaction history will appear here'}</p>
           </div>
         ) : (
           <div className="client-table-wrapper">

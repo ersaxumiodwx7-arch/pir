@@ -6,6 +6,7 @@ import './ClientPages.css';
 const ClientBillPay = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [accountInfo, setAccountInfo] = useState({ account_number: '', routing_number: '' });
@@ -39,11 +40,13 @@ const ClientBillPay = () => {
   }, []);
 
   const loadPayments = async () => {
+    setError(null);
     try {
       const response = await clientPortalAPI.getBillPayments();
       setPayments(response.data);
-    } catch (error) {
-      console.error('Failed to load bill payments:', error);
+    } catch (err) {
+      console.error('Failed to load bill payments:', err);
+      setError("We couldn't load your payment history. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -278,7 +281,15 @@ const ClientBillPay = () => {
           <h3>Payment History</h3>
         </div>
         {loading ? (
-          <div className="client-page-loading"><div className="client-loading-spinner"></div></div>
+          <div className="client-page-loading"><div className="client-loading-spinner"></div><p>Loading payment history...</p></div>
+        ) : error ? (
+          <div className="client-error-block" role="alert">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>{error}</p>
+            <button className="client-retry-btn" onClick={loadPayments}>Try Again</button>
+          </div>
         ) : payments.length === 0 ? (
           <div className="client-card-empty">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">

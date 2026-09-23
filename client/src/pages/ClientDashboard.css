@@ -805,3 +805,165 @@
 .client-dashboard-tracking-widget:hover .client-dashboard-tracking-footer {
   color: #60a5fa;
 }
+<<<<<<< HEAD
+=======
+
+/* ============================================
+   Your Representative Card
+   ============================================ */
+.client-representative-card .client-card-header {
+  margin-bottom: 12px;
+}
+
+.client-representative-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.client-representative-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.client-representative-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e3a8a, #1e293b);
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.client-representative-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.client-representative-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.client-representative-role {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.client-representative-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.client-representative-contact-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.client-representative-contact-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.client-representative-contact-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Inline card loading state */
+.client-card-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px;
+  gap: 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.client-loading-spinner-sm {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+  margin-bottom: 0;
+}
+
+/* Empty-state secondary text */
+.client-empty-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  max-width: 260px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============================================
+   Error State with Retry
+   ============================================ */
+.client-error-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  gap: 12px;
+  color: #ef4444;
+}
+
+.client-error-block p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.client-retry-btn {
+  padding: 9px 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #3b82f6;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.client-retry-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+>>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)

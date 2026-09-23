@@ -1,22 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clientPortalAPI } from '../services/api';
+import toast from 'react-hot-toast';
 import { CreditCardIcon, FileTextIcon, AlertCircleIcon, SettingsIcon, MessageIcon, CheckCircleIcon } from '../components/Icons';
 import './ClientPages.css';
 
 const ClientNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
+=======
+  const [error, setError] = useState(null);
+  const [markingAll, setMarkingAll] = useState(false);
+>>>>>>> 7529c39 (Add representative section, loading/error states, generic login errors)
   const navigate = useNavigate();
 
   useEffect(() => { loadNotifications(); }, []);
 
   const loadNotifications = async () => {
+    setError(null);
     try {
       const response = await clientPortalAPI.getNotifications();
       setNotifications(response.data);
     } catch (error) {
       console.error('Failed to load notifications:', error);
+      setError("We couldn't load your notifications. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -32,11 +40,15 @@ const ClientNotifications = () => {
   };
 
   const markAllAsRead = async () => {
+    setMarkingAll(true);
     try {
       await clientPortalAPI.markAllRead();
       setNotifications(notifications.map(n => ({ ...n, is_read: 1 })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
+      toast.error('Failed to mark notifications as read');
+    } finally {
+      setMarkingAll(false);
     }
   };
 
@@ -80,16 +92,33 @@ const ClientNotifications = () => {
           </p>
         </div>
         {unreadCount > 0 && (
-          <button className="client-btn client-btn-outline" onClick={markAllAsRead}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Mark All Read
+          <button className="client-btn client-btn-outline" onClick={markAllAsRead} disabled={markingAll}>
+            {markingAll ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ width: '14px', height: '14px', border: '2px solid #cbd5e1', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'clientSpin 0.7s linear infinite' }}></span>
+                Marking...
+              </span>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Mark All Read
+              </>
+            )}
           </button>
         )}
       </div>
 
       <div className="client-card">
         {loading ? (
-          <div className="client-page-loading"><div className="client-loading-spinner"></div></div>
+          <div className="client-page-loading"><div className="client-loading-spinner"></div><p>Loading notifications...</p></div>
+        ) : error ? (
+          <div className="client-error-block" role="alert">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>{error}</p>
+            <button className="client-retry-btn" onClick={loadNotifications}>Try Again</button>
+          </div>
         ) : notifications.length === 0 ? (
           <div className="client-card-empty">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">

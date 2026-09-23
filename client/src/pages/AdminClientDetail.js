@@ -12,6 +12,7 @@ const AdminClientDetail = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
+  const [savingProfile, setSavingProfile] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -234,6 +235,7 @@ const AdminClientDetail = () => {
   };
 
   const handleSaveProfile = async () => {
+    setSavingProfile(true);
     try {
       await adminClientsAPI.update(id, editData);
       toast.success('Client updated');
@@ -241,6 +243,8 @@ const AdminClientDetail = () => {
       loadClient();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to update');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -387,8 +391,10 @@ const AdminClientDetail = () => {
               <button className="admin-btn admin-btn-outline" onClick={() => setEditMode(true)}>Edit</button>
             ) : (
               <div className="admin-btn-group">
-                <button className="admin-btn admin-btn-ghost" onClick={() => { setEditMode(false); setEditData(client); }}>Cancel</button>
-                <button className="admin-btn admin-btn-primary" onClick={handleSaveProfile}>Save</button>
+                <button className="admin-btn admin-btn-ghost" onClick={() => { setEditMode(false); setEditData(client); }} disabled={savingProfile}>Cancel</button>
+                <button className="admin-btn admin-btn-primary" onClick={handleSaveProfile} disabled={savingProfile}>
+                  {savingProfile ? 'Saving...' : 'Save'}
+                </button>
               </div>
             )}
           </div>
@@ -427,6 +433,38 @@ const AdminClientDetail = () => {
               </div>
             )}
           </div>
+          {/* Assigned Representative (shown to client as "Your Representative" card) */}
+          <div className="admin-card-header" style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+            <h3>Assigned Representative</h3>
+            {!editMode && (
+              <button className="admin-btn admin-btn-outline" onClick={() => setEditMode(true)}>Edit</button>
+            )}
+          </div>
+          <div className="admin-form-grid">
+            {[
+              { key: 'representative_name', label: 'Representative Name', type: 'text', placeholder: 'e.g. Jane Pott' },
+              { key: 'representative_role', label: 'Position / Role', type: 'text', placeholder: 'e.g. Senior Case Representative' },
+              { key: 'representative_phone', label: 'Contact Phone (for tap-to-call)', type: 'tel', placeholder: 'e.g. +1 (555) 123-4567' },
+            ].map(field => (
+              <div key={field.key} className="admin-form-field">
+                <label>{field.label}</label>
+                {editMode ? (
+                  <input
+                    type={field.type}
+                    value={editData[field.key] || ''}
+                    onChange={(e) => setEditData({ ...editData, [field.key]: e.target.value })}
+                    placeholder={field.placeholder}
+                  />
+                ) : (
+                  <div className="admin-detail-value">{client[field.key] || '—'}</div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px', marginBottom: 0 }}>
+            This representative appears on the client's dashboard. Clients reach them via the phone number above — leave it blank to show the contact button as unavailable.
+          </p>
+
           <div className="admin-detail-meta">
             <span>Case ID: <strong>{client.case_id}</strong></span>
             <span>Created: {formatDate(client.created_at)}</span>

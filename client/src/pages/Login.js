@@ -2,19 +2,21 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { LockIcon, CheckCircleIcon, ShieldIcon } from '../components/Icons';
+import { LockIcon, CheckCircleIcon, XCircleIcon } from '../components/Icons';
 import './Login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError(false);
 
     const result = await login(email, password);
     
@@ -22,7 +24,10 @@ const Login = () => {
       toast.success('Login successful');
       navigate('/dashboard');
     } else {
-      toast.error(result.error);
+      // Generic message only - never reveal which field was wrong
+      setLoginError(true);
+      // Clear only the password; keep the email so the user can retry quickly
+      setPassword('');
     }
     
     setLoading(false);
@@ -35,6 +40,12 @@ const Login = () => {
           <h1 className="login-title">Pirates Panel</h1>
           <p className="login-subtitle">Admin Control Center</p>
         </div>
+        {loginError && (
+          <div className="login-error-banner" role="alert">
+            <XCircleIcon size={16} />
+            Incorrect email or password
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="login-form">
           <div className="login-group">
             <label>Username</label>

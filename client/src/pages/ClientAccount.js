@@ -5,17 +5,22 @@ import './ClientPages.css';
 const ClientAccount = () => {
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '', confirm_password: '' });
 
   useEffect(() => { loadAccount(); }, []);
 
   const loadAccount = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await clientPortalAPI.getAccount();
       setAccount(response.data);
-    } catch (error) {
-      console.error('Failed to load account:', error);
+    } catch (err) {
+      console.error('Failed to load account:', err);
+      setError("We couldn't load your account details. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -27,6 +32,7 @@ const ClientAccount = () => {
       alert('Passwords do not match');
       return;
     }
+    setSavingPassword(true);
     try {
       await clientPortalAPI.changePassword({
         current_password: passwords.current_password,
@@ -37,6 +43,8 @@ const ClientAccount = () => {
       setPasswords({ current_password: '', new_password: '', confirm_password: '' });
     } catch (error) {
       alert(error.response?.data?.error || 'Failed to change password');
+    } finally {
+      setSavingPassword(false);
     }
   };
 
@@ -45,8 +53,21 @@ const ClientAccount = () => {
     return new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
-  if (loading) return <div className="client-page-loading"><div className="client-loading-spinner"></div></div>;
-  if (!account) return <div className="client-page-error">Failed to load account details</div>;
+  if (loading) return <div className="client-page-loading"><div className="client-loading-spinner"></div><p>Loading account details...</p></div>;
+
+  if (error) {
+    return (
+      <div className="client-page-error client-error-block" role="alert">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>{error}</p>
+        <button className="client-retry-btn" onClick={loadAccount}>Try Again</button>
+      </div>
+    );
+  }
+
+  if (!account) return null;
 
   return (
     <div className="client-page">
@@ -164,7 +185,14 @@ const ClientAccount = () => {
                 <input type="password" value={passwords.confirm_password} onChange={(e) => setPasswords({...passwords, confirm_password: e.target.value})} required minLength={6} />
               </div>
               <div className="client-form-actions">
-                <button type="submit" className="client-btn client-btn-primary">Save Password</button>
+                <button type="submit" className="client-btn client-btn-primary" disabled={savingPassword}>
+                  {savingPassword ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'clientSpin 0.7s linear infinite' }}></span>
+                      Saving...
+                    </span>
+                  ) : 'Save Password'}
+                </button>
                 <button type="button" className="client-btn client-btn-ghost" onClick={() => setShowChangePassword(false)}>Cancel</button>
               </div>
             </form>

@@ -6,7 +6,7 @@ const getDashboard = async (req, res) => {
     const clientId = req.client.clientId;
 
     const clientResult = await pool.query(
-      `SELECT id, case_id, full_name, email, phone, account_status, display_balance as balance, account_type, account_number, routing_number, created_at, last_login_at FROM clients WHERE id = $1`,
+      `SELECT id, case_id, full_name, email, phone, account_status, display_balance as balance, account_type, account_number, routing_number, representative_name, representative_role, representative_phone, created_at, last_login_at FROM clients WHERE id = $1`,
       [clientId]
     );
 
@@ -96,7 +96,7 @@ const getAccountDetails = async (req, res) => {
   try {
     const clientId = req.client.clientId;
     const result = await pool.query(
-      `SELECT id, case_id, full_name, email, phone, account_status, display_balance as balance, account_type, account_number, routing_number, created_at, last_login_at, address, date_of_birth
+      `SELECT id, case_id, full_name, email, phone, account_status, display_balance as balance, account_type, account_number, routing_number, representative_name, representative_role, representative_phone, created_at, last_login_at, address, date_of_birth
        FROM clients WHERE id = $1`,
       [clientId]
     );
