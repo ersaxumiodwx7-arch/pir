@@ -9,7 +9,8 @@
     "migrate": "node src/database/migrate.js",
     "migrate:sqlite": "node src/database/migrate-sqlite.js",
     "seed": "node src/database/seed.js",
-    "seed:sqlite": "node src/database/seed-sqlite.js"
+    "seed:sqlite": "node src/database/seed-sqlite.js",
+    "migrate:pg": "node src/database/migrate-sqlite-to-pg.js"
   },
   "dependencies": {
     "express": "^4.18.2",

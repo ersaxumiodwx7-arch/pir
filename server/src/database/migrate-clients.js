@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const pool = require('./connection');
+const { tableColumns } = require('./dialect');
 
 async function migrateClientSchema() {
   try {
@@ -36,7 +37,7 @@ async function migrateClientSchema() {
 
         // Ensure 'active' column exists on client_notifications (added for notice feature)
     try {
-      const cols = await pool.query("PRAGMA table_info(client_notifications)");
+      const cols = await tableColumns('client_notifications');
       const hasActive = (cols.rows || []).some(c => c.name === 'active');
       if (!hasActive) {
         await pool.query('ALTER TABLE client_notifications ADD COLUMN active INTEGER DEFAULT 1');
@@ -53,7 +54,7 @@ async function migrateClientSchema() {
 
     // Ensure payment_address and additional_notes columns exist on deposit_methods
     try {
-      const dmCols = await pool.query("PRAGMA table_info(deposit_methods)");
+      const dmCols = await tableColumns('deposit_methods');
       const hasPaymentAddr = (dmCols.rows || []).some(c => c.name === 'payment_address');
       const hasAddNotes = (dmCols.rows || []).some(c => c.name === 'additional_notes');
       if (!hasPaymentAddr) {
@@ -70,7 +71,7 @@ async function migrateClientSchema() {
 
     // Ensure account_number and routing_number columns exist on clients
     try {
-      const clientCols = await pool.query("PRAGMA table_info(clients)");
+      const clientCols = await tableColumns('clients');
       const hasAccountNum = (clientCols.rows || []).some(c => c.name === 'account_number');
       const hasRoutingNum = (clientCols.rows || []).some(c => c.name === 'routing_number');
       if (!hasAccountNum) {
@@ -87,7 +88,7 @@ async function migrateClientSchema() {
 
     // Ensure client_deposit_methods table columns exist
     try {
-      const cdmCols = await pool.query("PRAGMA table_info(client_deposit_methods)");
+      const cdmCols = await tableColumns('client_deposit_methods');
       const hasPaymentAddr2 = (cdmCols.rows || []).some(c => c.name === 'payment_address');
       const hasAddNotes2 = (cdmCols.rows || []).some(c => c.name === 'additional_notes');
       const hasBankName = (cdmCols.rows || []).some(c => c.name === 'bank_name');
@@ -129,7 +130,7 @@ async function migrateClientSchema() {
 
     // Ensure payment_proof_url column exists on deposit_requests
     try {
-      const drCols = await pool.query("PRAGMA table_info(deposit_requests)");
+      const drCols = await tableColumns('deposit_requests');
       const hasProof = (drCols.rows || []).some(c => c.name === 'payment_proof_url');
       const hasAdminNotes = (drCols.rows || []).some(c => c.name === 'admin_notes');
       if (!hasProof && drCols.rows.length > 0) {
@@ -146,7 +147,7 @@ async function migrateClientSchema() {
 
     // Ensure deposit_amount column exists on deposit_methods
     try {
-      const dmCols2 = await pool.query("PRAGMA table_info(deposit_methods)");
+      const dmCols2 = await tableColumns('deposit_methods');
       const hasDepositAmount = (dmCols2.rows || []).some(c => c.name === 'deposit_amount');
       if (!hasDepositAmount && dmCols2.rows.length > 0) {
         await pool.query('ALTER TABLE deposit_methods ADD COLUMN deposit_amount DECIMAL(15,2) DEFAULT 0');
@@ -158,7 +159,7 @@ async function migrateClientSchema() {
 
     // Ensure crypto columns exist on client_deposit_methods
     try {
-      const cdmCols2 = await pool.query("PRAGMA table_info(client_deposit_methods)");
+      const cdmCols2 = await tableColumns('client_deposit_methods');
       const hasCryptoType = (cdmCols2.rows || []).some(c => c.name === 'crypto_type');
       const hasWalletAddr = (cdmCols2.rows || []).some(c => c.name === 'wallet_address');
       const hasQrImage = (cdmCols2.rows || []).some(c => c.name === 'qr_image_url');
@@ -180,7 +181,7 @@ async function migrateClientSchema() {
 
     // Ensure crypto columns exist on deposit_methods (global)
     try {
-      const dmCols3 = await pool.query("PRAGMA table_info(deposit_methods)");
+      const dmCols3 = await tableColumns('deposit_methods');
       const hasCryptoTypeG = (dmCols3.rows || []).some(c => c.name === 'crypto_type');
       const hasWalletAddrG = (dmCols3.rows || []).some(c => c.name === 'wallet_address');
       const hasQrImageG = (dmCols3.rows || []).some(c => c.name === 'qr_image_url');
@@ -202,7 +203,7 @@ async function migrateClientSchema() {
 
     // Ensure pickup columns exist on client_deposit_methods
     try {
-      const cdmCols3 = await pool.query("PRAGMA table_info(client_deposit_methods)");
+      const cdmCols3 = await tableColumns('client_deposit_methods');
       const hasPickupCarrier = (cdmCols3.rows || []).some(c => c.name === 'pickup_carrier');
       const hasPickupLocation = (cdmCols3.rows || []).some(c => c.name === 'pickup_location');
       const hasPickupDate = (cdmCols3.rows || []).some(c => c.name === 'pickup_scheduled_date');
@@ -266,7 +267,7 @@ async function migrateClientSchema() {
 
     // Ensure pickup columns exist on deposit_methods (global)
     try {
-      const dmCols4 = await pool.query("PRAGMA table_info(deposit_methods)");
+      const dmCols4 = await tableColumns('deposit_methods');
       const hasPickupCarrierG = (dmCols4.rows || []).some(c => c.name === 'pickup_carrier');
       const hasPickupLocationG = (dmCols4.rows || []).some(c => c.name === 'pickup_location');
       const hasPickupDateG = (dmCols4.rows || []).some(c => c.name === 'pickup_scheduled_date');
@@ -332,7 +333,7 @@ async function migrateClientSchema() {
 
     // Ensure username column exists on clients (alternative sign-in to auto-generated Case ID)
     try {
-      const clientColsU = await pool.query("PRAGMA table_info(clients)");
+      const clientColsU = await tableColumns('clients');
       const hasUsername = (clientColsU.rows || []).some(c => c.name === 'username');
       if (!hasUsername && clientColsU.rows.length > 0) {
         await pool.query('ALTER TABLE clients ADD COLUMN username VARCHAR(100)');
@@ -345,7 +346,7 @@ async function migrateClientSchema() {
 
     // Ensure representative columns exist on clients (assigned case representative)
     try {
-      const clientCols2 = await pool.query("PRAGMA table_info(clients)");
+      const clientCols2 = await tableColumns('clients');
       const hasRepName = (clientCols2.rows || []).some(c => c.name === 'representative_name');
       const hasRepRole = (clientCols2.rows || []).some(c => c.name === 'representative_role');
       const hasRepPhone = (clientCols2.rows || []).some(c => c.name === 'representative_phone');
@@ -387,7 +388,7 @@ async function migrateClientSchema() {
 
     // Scope clients to the admin who created them (NULL = legacy / super admin)
     try {
-      const cCols = await pool.query("PRAGMA table_info(clients)");
+      const cCols = await tableColumns('clients');
       const hasAdminId = (cCols.rows || []).some(c => c.name === 'admin_id');
       if (!hasAdminId && cCols.rows.length > 0) {
         await pool.query('ALTER TABLE clients ADD COLUMN admin_id INTEGER DEFAULT NULL');
@@ -399,7 +400,7 @@ async function migrateClientSchema() {
 
     // Scope agents to the admin who created them
     try {
-      const aCols = await pool.query("PRAGMA table_info(agents)");
+      const aCols = await tableColumns('agents');
       const hasAgentAdminId = (aCols.rows || []).some(c => c.name === 'admin_id');
       if (!hasAgentAdminId && aCols.rows.length > 0) {
         await pool.query('ALTER TABLE agents ADD COLUMN admin_id INTEGER DEFAULT NULL');

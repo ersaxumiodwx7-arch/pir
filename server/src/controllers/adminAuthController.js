@@ -1,4 +1,5 @@
 const pool = require('../database/connection');
+const { tableExists } = require('../database/dialect');
 const bcrypt = require('bcryptjs');
 
 // Resolve the requester's role: JWT role first, fallback to users table
@@ -82,8 +83,8 @@ const createAdmin = async (req, res) => {
 
     // Mirror into users table so /api/auth/login can authenticate this username
     try {
-      const usersTable = await pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
-      if (usersTable.rows.length > 0) {
+      const usersTableExists = await tableExists('users');
+      if (usersTableExists) {
         const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
         if (existingUser.rows.length === 0) {
           await pool.query(
@@ -147,8 +148,8 @@ const updateAdmin = async (req, res) => {
 
     // Keep users table in sync (password/email changes must reflect for login)
     try {
-      const usersTable = await pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
-      if (usersTable.rows.length > 0) {
+      const usersTableExists = await tableExists('users');
+      if (usersTableExists) {
         const finalEmail = email !== undefined ? email : admin.email;
         const userUpdate = await pool.query('UPDATE users SET password_hash = $1, email = $2 WHERE username = $3',
           [passwordHash, finalEmail || (admin.username + '@admin.local'), admin.username]);

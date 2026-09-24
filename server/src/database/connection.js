@@ -2,10 +2,11 @@ require('dotenv').config();
 
 // Default to SQLite if no DATABASE_URL or if it starts with 'sqlite'
 const dbUrl = process.env.DATABASE_URL || 'sqlite:./formflow.db';
+const isPostgres = dbUrl.startsWith('postgres');
 
 let db;
 
-if (!dbUrl.startsWith('postgres')) {
+if (!isPostgres) {
   const sqlite3 = require('sqlite3').verbose();
   const dbPath = dbUrl.replace('sqlite:', '');
   db = new sqlite3.Database(dbPath);
@@ -43,9 +44,10 @@ if (!dbUrl.startsWith('postgres')) {
       });
     });
   });
-  
+
   // Wrapper to make SQLite compatible with pg-like interface
   module.exports = {
+    getPool: () => db,
     query: (text, params) => {
       return new Promise((resolve, reject) => {
         // Convert PostgreSQL parameter placeholders ($1, $2) to SQLite placeholders (?, ?)
@@ -87,9 +89,61 @@ if (!dbUrl.startsWith('postgres')) {
     }
   };
 } else {
+  // PostgreSQL mode: data lives in a managed database (Railway/Render/Neon/
+  // Supabase) and SURVIVES REDEPLOYS. Statements arrive written in the app's
+  // SQLite style; translateSql rewrites the SQLite-only constructs.
   const { Pool } = require('pg');
-  db = new Pool({
+  const { translateSql } = require('./dialect');
+
+  // NUMERIC/DECIMAL columns come back as strings by default, which would
+  // silently break balance arithmetic ("100" + 50 === "10050"). Parse as float.
+  const pgTypes = require('pg').types;
+  pgTypes.setTypeParser(1700, (val) => (val === null ? null : parseFloat(val)));
+
+  // Managed hosts: public URLs need TLS, internal ones (e.g. Railway's
+  // *.railway.internal) reject it. Auto-detect with env overrides.
+  let ssl;
+  if (process.env.PGSSL_DISABLE === '1') {
+    ssl = false;
+  } else if (process.env.PGSSL_REQUIRE === '1') {
+    ssl = { rejectUnauthorized: false };
+  } else {
+    const host = (() => {
+      try { return new URL(dbUrl).hostname; } catch (e) { return ''; }
+    })();
+    const internal = /(^|\.)(railway\.internal|internal|localhost|local)$/i.test(host) ||
+      /^(127\.0\.0\.1|::1|10\.|192\.168\.)/.test(host);
+    ssl = internal ? false : { rejectUnauthorized: false };
+  }
+
+  const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    ssl
   });
-  module.exports = db;
+
+  module.exports = {
+    getPool: () => pool,
+    query: async (text, params) => {
+      const sql = translateSql(text);
+      // pg throws on undefined params; the app treats them as NULL
+      const cleanParams = (params || []).map((p) => (p === undefined ? null : p));
+      const result = await pool.query(sql, cleanParams);
+
+      // Emulate sqlite3's lastID for INSERTs that use RETURNING. Callers that
+      // insert without RETURNING don't read lastID (verified across the app).
+      const lastID = result.command === 'INSERT' && result.rows[0]
+        ? (result.rows[0].id ?? null)
+        : null;
+
+      return {
+        rows: result.rows || [],
+        rowCount: result.rowCount,
+        changes: result.rowCount,
+        lastID
+      };
+    },
+    connect: () => pool.connect().then((c) => c.release()),
+    end: () => pool.end(),
+    __pgPool: pool
+  };
 }
