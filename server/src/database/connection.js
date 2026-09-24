@@ -121,6 +121,19 @@ if (!isPostgres) {
     ssl
   });
 
+  // pg returns TIMESTAMP columns as Date objects, but the app (and SQLite)
+  // treats timestamps as ISO strings (.includes('T'), .slice(0, 10), string
+  // concat in new Date(...)). Normalize once here so every query result
+  // behaves like SQLite's text timestamps.
+  const normalizeRows = (rows) => (rows || []).map((row) => {
+    const out = {};
+    for (const key in row) {
+      const v = row[key];
+      out[key] = v instanceof Date ? v.toISOString() : v;
+    }
+    return out;
+  });
+
   module.exports = {
     getPool: () => pool,
     query: async (text, params) => {
@@ -136,7 +149,7 @@ if (!isPostgres) {
         : null;
 
       return {
-        rows: result.rows || [],
+        rows: normalizeRows(result.rows),
         rowCount: result.rowCount,
         changes: result.rowCount,
         lastID
