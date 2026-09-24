@@ -189,7 +189,7 @@ clientApi.interceptors.response.use(
 );
 
 export const clientPortalAPI = {
-  login: (caseId, password) => clientApi.post('/client/auth/login', { case_id: caseId, password }),
+  login: (caseId, password) => clientApi.post('/client/auth/login', { case_id: caseId, password, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '' }),
   getProfile: () => clientApi.get('/client/auth/profile'),
   changePassword: (data) => clientApi.post('/client/auth/change-password', data),
   forgotPassword: (data) => clientApi.post('/client/auth/forgot-password', data),
@@ -202,6 +202,10 @@ export const clientPortalAPI = {
   markRead: (id) => clientApi.put(`/client/notifications/${id}/read`),
   markAllRead: () => clientApi.put('/client/notifications/read-all'),
   getActivity: () => clientApi.get('/client/activity'),
+  // Admin-only, mounted under adminClientsAPI for convenience
+  getBlockedIps: (clientId) => api.get(`/admin/clients/${clientId}/blocked-ips`),
+  blockIp: (clientId, data) => api.post(`/admin/clients/${clientId}/blocked-ips`, data),
+  unblockIp: (clientId, blockId) => api.delete(`/admin/clients/${clientId}/blocked-ips/${blockId}`),
   // Bill Payments
   getBillPayments: () => clientApi.get('/client/bill-payments'),
   submitBillPayment: (data) => clientApi.post('/client/bill-payments', data),

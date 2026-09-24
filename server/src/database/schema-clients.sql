@@ -86,8 +86,18 @@ CREATE TABLE IF NOT EXISTS client_activity_logs (
   description TEXT,
   ip_address VARCHAR(50),
   user_agent TEXT,
+  timezone VARCHAR(100),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+);
+
+-- Blocked IP addresses (cannot log in as client or admin while listed)
+CREATE TABLE IF NOT EXISTS blocked_ips (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ip_address VARCHAR(64) UNIQUE NOT NULL,
+  reason TEXT,
+  created_by INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Client session tokens (for tracking active sessions)

@@ -410,6 +410,32 @@ async function migrateClientSchema() {
       // Table may not exist yet
     }
 
+    // Blocked IPs table (admin can ban IPs from logging in)
+    try {
+      await pool.query(`CREATE TABLE IF NOT EXISTS blocked_ips (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip_address VARCHAR(64) UNIQUE NOT NULL,
+        reason TEXT,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+    } catch (e) {
+      if (!e.message.includes('already exists')) console.error('blocked_ips migration warning:', e.message);
+    }
+
+    // Ensure timezone column exists on client_activity_logs (captured from
+    // the browser at login so admins see the client's local time zone)
+    try {
+      const actCols = await tableColumns('client_activity_logs');
+      const hasTimezone = (actCols.rows || []).some(c => c.name === 'timezone');
+      if (!hasTimezone && actCols.rows.length > 0) {
+        await pool.query('ALTER TABLE client_activity_logs ADD COLUMN timezone VARCHAR(100)');
+        console.log('Schema migration: added client_activity_logs.timezone');
+      }
+    } catch (e) {
+      // Table may not exist yet - CREATE TABLE handles it
+    }
+
     console.log('Client portal migrations completed');
   } catch (error) {
     console.error('Client portal migration error:', error.message);

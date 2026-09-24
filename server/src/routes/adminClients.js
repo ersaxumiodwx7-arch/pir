@@ -7,7 +7,7 @@ const {
   getClientDocuments, uploadDocument, deleteDocument,
   getClientNotifications, createNotification, updateNotification, deleteNotification, broadcastNotification,
   getBillPayments, createBillPayment, updateBillPaymentStatus,
-  getClientActivity,
+  getClientActivity, getBlockedIps, blockIp, unblockIp,
   getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod,
   updatePickupTracking
 } = require('../controllers/adminClientsController');
@@ -53,5 +53,10 @@ router.put('/:id/bill-payments/:billId', adminAuth, updateBillPaymentStatus);
 
 // Activity
 router.get('/:id/activity', adminAuth, getClientActivity);
+
+// Blocked IPs
+router.get('/:id/blocked-ips', adminAuth, getBlockedIps);
+router.post('/:id/blocked-ips', adminAuth, blockIp);
+router.delete('/:id/blocked-ips/:blockId', adminAuth, unblockIp);
 
 module.exports = router;

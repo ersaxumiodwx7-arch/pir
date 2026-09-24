@@ -49,10 +49,14 @@ const clientLogin = async (req, res) => {
       [client.id]
     );
 
-    // Log activity
+    // Log activity with IP, browser and the client's local timezone (sent by
+    // the login page) so admins can audit each session
+    const { getClientIp } = require('../middleware/ipBlock');
     await pool.query(
-      'INSERT INTO client_activity_logs (client_id, action, description, ip_address) VALUES ($1, $2, $3, $4)',
-      [client.id, 'login', 'Client logged in', req.ip]
+      'INSERT INTO client_activity_logs (client_id, action, description, ip_address, user_agent, timezone) VALUES ($1, $2, $3, $4, $5, $6)',
+      [client.id, 'login', 'Client logged in', getClientIp(req),
+       String(req.headers['user-agent'] || '').slice(0, 500),
+       String(req.body.timezone || '').slice(0, 100) || null]
     );
 
     const token = jwt.sign(

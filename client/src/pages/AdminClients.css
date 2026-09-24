@@ -1982,3 +1982,75 @@
     font-size: 12px;
   }
 }
+
+/* ======================= ACTIVITY (IP + timezone) ======================= */
+.admin-activity-badges {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 10px;
+  flex-wrap: wrap;
+  vertical-align: middle;
+}
+
+.activity-ip-chip,
+.activity-tz-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: 'Consolas', monospace;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+  white-space: nowrap;
+}
+
+.activity-tz-chip {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  font-family: inherit;
+}
+
+.activity-ip-chip.ip-chip-blocked {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.admin-activity-ip-actions {
+  margin-top: 8px;
+}
+
+.btn-ip-action {
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-ip-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-ip-block {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.btn-ip-block:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+.btn-ip-unblock {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.btn-ip-unblock:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.22);
+}

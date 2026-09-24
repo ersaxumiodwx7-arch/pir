@@ -818,7 +818,7 @@ const updateBillPaymentStatus = async (req, res) => {
   }
 };
 
-// Activity logs
+// Activity logs (enriched with blocked-IP state per row)
 const getClientActivity = async (req, res) => {
   try {
     const { id } = req.params;
@@ -826,9 +826,70 @@ const getClientActivity = async (req, res) => {
       'SELECT * FROM client_activity_logs WHERE client_id = $1 ORDER BY created_at DESC LIMIT 100',
       [id]
     );
-    res.json(result.rows);
+    const blocked = await pool.query('SELECT ip_address FROM blocked_ips');
+    const blockedSet = new Set((blocked.rows || []).map(r => r.ip_address));
+    res.json(result.rows.map(r => ({ ...r, ip_blocked: blockedSet.has(r.ip_address) })));
   } catch (error) {
     console.error('Get activity error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Blocked IP management
+const getBlockedIps = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT b.*, c.full_name AS blocked_for_client, c.case_id AS client_case_id
+       FROM blocked_ips b
+       LEFT JOIN clients c ON c.id = (
+         SELECT client_id FROM client_activity_logs
+         WHERE ip_address = b.ip_address AND client_id = $1
+         LIMIT 1
+       )
+       ORDER BY b.created_at DESC`,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get blocked IPs error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const blockIp = async (req, res) => {
+  try {
+    const { ip_address, reason } = req.body;
+    const ip = String(ip_address || '').trim();
+    if (!ip || ip.length > 64 || !/^[0-9a-fA-F:.]+$/.test(ip)) {
+      return res.status(400).json({ error: 'A valid IP address is required' });
+    }
+    try {
+      await pool.query(
+        'INSERT INTO blocked_ips (ip_address, reason, created_by) VALUES ($1, $2, $3)',
+        [ip, reason ? String(reason).slice(0, 500) : null, req.user ? req.user.userId : null]
+      );
+    } catch (e) {
+      if (e.message.includes('unique') || e.message.includes('duplicate')) {
+        return res.status(400).json({ error: 'That IP is already blocked' });
+      }
+      throw e;
+    }
+    res.status(201).json({ message: `IP ${ip} blocked` });
+  } catch (error) {
+    console.error('Block IP error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const unblockIp = async (req, res) => {
+  try {
+    const r = await pool.query('DELETE FROM blocked_ips WHERE id = $1', [req.params.blockId]);
+    if (!r.changes) {
+      return res.status(404).json({ error: 'Blocked IP not found' });
+    }
+    res.json({ message: 'IP unblocked' });
+  } catch (error) {
+    console.error('Unblock IP error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

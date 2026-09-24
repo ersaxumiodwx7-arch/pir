@@ -17,6 +17,8 @@ const AdminClientDetail = () => {
   const [documents, setDocuments] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [activity, setActivity] = useState([]);
+  const [blockedIps, setBlockedIps] = useState([]);
+  const [ipWorking, setIpWorking] = useState(null);
   const [billPayments, setBillPayments] = useState([]);
   const [clientDepositMethods, setClientDepositMethods] = useState([]);
 
@@ -57,7 +59,7 @@ const AdminClientDetail = () => {
   useEffect(() => { if (activeTab === 'transactions') loadTransactions(); }, [activeTab]);
   useEffect(() => { if (activeTab === 'documents') loadDocuments(); }, [activeTab]);
   useEffect(() => { if (activeTab === 'notifications') loadNotifications(); }, [activeTab]);
-  useEffect(() => { if (activeTab === 'activity') loadActivity(); }, [activeTab]);
+  useEffect(() => { if (activeTab === 'activity') { loadActivity(); loadBlockedIps(); } }, [activeTab]);
   useEffect(() => { if (activeTab === 'billPayments') loadBillPayments(); }, [activeTab]);
   useEffect(() => { if (activeTab === 'depositMethods') loadClientDepositMethods(); }, [activeTab]);
 
@@ -99,7 +101,39 @@ const AdminClientDetail = () => {
     try {
       const response = await adminClientsAPI.getActivity(id);
       setActivity(response.data);
+      setError('');
     } catch (error) { toast.error('Failed to load activity'); }
+  };
+
+  const loadBlockedIps = async () => {
+    try {
+      const response = await adminClientsAPI.getBlockedIps(id);
+      setBlockedIps(response.data);
+    } catch (error) { /* non-fatal */ }
+  };
+
+  const handleBlockIp = async (ip, reason) => {
+    setIpWorking(ip);
+    try {
+      await adminClientsAPI.blockIp(id, { ip_address: ip, reason: reason || 'Blocked from client activity' });
+      toast.success(`IP ${ip} blocked`);
+      await Promise.all([loadBlockedIps(), loadActivity()]);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to block IP');
+    }
+    setIpWorking(null);
+  };
+
+  const handleUnblockIp = async (blockId, ip) => {
+    setIpWorking(ip);
+    try {
+      await adminClientsAPI.unblockIp(id, blockId);
+      toast.success('IP unblocked');
+      await Promise.all([loadBlockedIps(), loadActivity()]);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to unblock IP');
+    }
+    setIpWorking(null);
   };
 
   const loadBillPayments = async () => {
@@ -1018,7 +1052,7 @@ const AdminClientDetail = () => {
       {/* Activity Tab */}
       {activeTab === 'activity' && (
         <div className="admin-card">
-          <div className="admin-card-header"><h3>Activity Log</h3></div>
+          <div className="admin-card-header"><h3>Login & Activity Log</h3></div>
           {activity.length === 0 ? (
             <div className="admin-card-empty"><p>No activity recorded yet</p></div>
           ) : (
@@ -1027,9 +1061,52 @@ const AdminClientDetail = () => {
                 <div key={log.id} className="admin-activity-item">
                   <div className="admin-activity-dot"></div>
                   <div className="admin-activity-content">
-                    <div className="admin-activity-action">{log.action}</div>
+                    <div className="admin-activity-action">
+                      {log.action}
+                      {log.action === 'login' && (
+                        <span className="admin-activity-badges">
+                          {log.ip_address && (
+                            <span className={`activity-ip-chip ${log.ip_blocked ? 'ip-chip-blocked' : ''}`}
+                                  title={log.ip_blocked ? 'This IP is blocked' : 'Allowed'}>
+                              {log.ip_blocked ? '⛔ ' : '🌐 '}{log.ip_address}
+                            </span>
+                          )}
+                          {log.timezone && (
+                            <span className="activity-tz-chip" title="Client's local timezone at login">🕒 {log.timezone}</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
                     <div className="admin-activity-desc">{log.description}</div>
                     <div className="admin-activity-time">{formatDateTime(log.created_at)}</div>
+                    {log.action === 'login' && log.ip_address && (
+                      <div className="admin-activity-ip-actions">
+                        {log.ip_blocked ? (
+                          <button
+                            className="btn-ip-action btn-ip-unblock"
+                            disabled={ipWorking === log.ip_address}
+                            onClick={() => {
+                              const b = blockedIps.find(x => x.ip_address === log.ip_address);
+                              if (b) handleUnblockIp(b.id, log.ip_address);
+                            }}
+                          >
+                            {ipWorking === log.ip_address ? 'Working...' : 'Unblock IP'}
+                          </button>
+                        ) : (
+                          <button
+                            className="btn-ip-action btn-ip-block"
+                            disabled={ipWorking === log.ip_address}
+                            onClick={() => {
+                              if (window.confirm(`Block IP ${log.ip_address}? The client will not be able to log in from this network until you unblock it.`)) {
+                                handleBlockIp(log.ip_address);
+                              }
+                            }}
+                          >
+                            {ipWorking === log.ip_address ? 'Working...' : 'Block IP'}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

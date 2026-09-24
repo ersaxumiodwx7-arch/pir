@@ -15,9 +15,15 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Middleware
+app.set('trust proxy', true); // behind Railway/Render proxy: req.ip = real client IP
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Reject requests from IPs the super admin has blocked
+const { blockBlockedIps } = require('./middleware/ipBlock');
+app.use('/api/client/auth/login', blockBlockedIps);
+app.use('/api/auth/login', blockBlockedIps);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
