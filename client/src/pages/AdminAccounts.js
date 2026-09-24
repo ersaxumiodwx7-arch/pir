@@ -13,6 +13,7 @@ const AdminAccounts = () => {
     subscription_days: '', subscription_expires_at: ''
   });
   const [actionMsg, setActionMsg] = useState('');
+  const [formError, setFormError] = useState('');
 
   const fetchAdmins = useCallback(async () => {
     try {
@@ -34,6 +35,7 @@ const AdminAccounts = () => {
   const resetForm = () => {
     setFormData({ username: '', email: '', password: '', subscription_days: '', subscription_expires_at: '' });
     setEditingAdmin(null);
+    setFormError('');
     setShowModal(false);
   };
 
@@ -53,6 +55,7 @@ const AdminAccounts = () => {
     e.preventDefault();
     setError('');
     setActionMsg('');
+    setFormError('');
     try {
       const payload = {
         username: formData.username.trim(),
@@ -80,7 +83,9 @@ const AdminAccounts = () => {
       fetchAdmins();
       setTimeout(() => setActionMsg(''), 4000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save admin');
+      // Show the server's exact reason INSIDE the modal - a page-level alert
+      // would be hidden behind the overlay
+      setFormError(err.response?.data?.error || 'Failed to save admin');
     }
   };
 
@@ -263,6 +268,11 @@ const AdminAccounts = () => {
               <p style={{ color: '#64748b', fontSize: '13px', margin: '4px 0 12px' }}>
                 Leave both blank to remove the subscription (admin will be locked out until a date is set).
               </p>
+              {formError && (
+                <div className="alert alert-error" role="alert" style={{ marginBottom: '12px' }}>
+                  {formError}
+                </div>
+              )}
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={resetForm}>Cancel</button>
                 <button type="submit" className="btn btn-primary">{editingAdmin ? 'Save Changes' : 'Create Admin'}</button>
