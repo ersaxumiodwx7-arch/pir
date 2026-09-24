@@ -1080,7 +1080,7 @@ module.exports = {
   getClientDocuments, uploadDocument, deleteDocument,
   getClientNotifications, createNotification, updateNotification, deleteNotification, broadcastNotification,
   getBillPayments, createBillPayment, updateBillPaymentStatus,
-  getClientActivity,
+  getClientActivity, getBlockedIps, blockIp, unblockIp,
   getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod,
   updatePickupTracking
 };

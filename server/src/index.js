@@ -183,22 +183,44 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Health endpoint: answers immediately, independent of DB state, so the
+// platform healthcheck passes even while migrations are still running.
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    db: process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres') ? 'postgresql' : 'sqlite',
+    db_ready: dbReady,
+    uptime_s: Math.round(process.uptime())
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Initialize database FIRST, then start the server
-initDatabase().then(() => {
-  console.log('Database initialized successfully');
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}).catch((err) => {
-  console.error('Database initialization failed:', err.message);
-  // Still start the server even if init fails - some routes may work
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT} (with DB init errors)`);
-  });
+// Start listening IMMEDIATELY, then initialize the database in the
+// background. Migrations now run one statement at a time over the network
+// to managed Postgres (hundreds of round-trips), which can take minutes -
+// binding first keeps the platform healthcheck from killing the deploy.
+let dbReady = false;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT} (DB init running in background)`);
 });
+
+initDatabase()
+  .then(() => {
+    dbReady = true;
+    console.log('Database initialized successfully');
+  })
+  .catch((err) => {
+    console.error('Database initialization failed:', err.message);
+    // Retry once after a delay - transient DNS/network issues at boot are
+    // common on container platforms
+    setTimeout(() => {
+      initDatabase()
+        .then(() => { dbReady = true; console.log('Database initialized successfully (retry)'); })
+        .catch((e2) => console.error('Database init retry failed:', e2.message));
+    }, 15000);
+  });
