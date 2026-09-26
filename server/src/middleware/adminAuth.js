@@ -16,10 +16,19 @@ const adminAuth = async (req, res, next) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
+    // Normalize adminId to a number: on Postgres, admins.id is BIGSERIAL and
+    // pg returns it as a string ("3"), which was baked into the JWT. Every
+    // ownership check compares it against clients.admin_id (INTEGER -> number),
+    // so a raw string adminId made "3" !== 3 and 403'd every normal admin.
+    const rawAdminId = decoded.adminId;
+    const adminId = rawAdminId !== undefined && rawAdminId !== null && rawAdminId !== ''
+      ? Number(rawAdminId)
+      : null;
+
     req.user = {
       ...decoded,
       role: decoded.role || 'admin',
-      adminId: decoded.adminId !== undefined ? decoded.adminId : null
+      adminId: adminId !== null && !Number.isNaN(adminId) ? adminId : null
     };
 
     // Multi-admin enforcement: normal admins must have an active subscription

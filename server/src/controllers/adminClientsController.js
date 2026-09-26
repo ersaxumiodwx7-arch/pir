@@ -1,6 +1,15 @@
 const pool = require('../database/connection');
 const bcrypt = require('bcryptjs');
 
+// Ownership check helper. Compares as strings so a numeric clients.admin_id
+// (INTEGER -> 3) still matches an adminId that arrived as a string ("3") from
+// legacy JWTs minted when pg returned the BIGSERIAL admins.id as text.
+function canAccessClient(row, req) {
+  if (!req.user || req.user.role === 'super_admin') return true;
+  if (!req.user.adminId) return true; // legacy admin token - unscoped
+  return String(row.admin_id) === String(req.user.adminId);
+}
+
 // Scope helper: normal admins only see their own clients; super admin sees all
 // Returns { clause, params } to append to a clients WHERE clause
 function clientScope(req) {
@@ -119,7 +128,7 @@ const getClient = async (req, res) => {
     }
 
     // Scope check: normal admins can't view other admins' clients
-    if (req.user && req.user.role !== 'super_admin' && req.user.adminId && result.rows[0].admin_id !== req.user.adminId) {
+    if (!canAccessClient(result.rows[0], req)) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -258,6 +267,15 @@ const updateClient = async (req, res) => {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
+    // Scope check BEFORE writing: normal admins can't modify other admins' clients
+    const existing = await pool.query('SELECT admin_id FROM clients WHERE id = $1', [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    if (!canAccessClient(existing.rows[0], req)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     setClauses.push('updated_at = CURRENT_TIMESTAMP');
     params.push(id);
 
@@ -268,11 +286,6 @@ const updateClient = async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
-    }
-
-    // Scope check
-    if (req.user && req.user.role !== 'super_admin' && req.user.adminId && result.rows[0].admin_id !== req.user.adminId) {
-      return res.status(403).json({ error: 'Access denied' });
     }
 
     const client = result.rows[0];
@@ -294,7 +307,7 @@ const deleteClient = async (req, res) => {
     if (existing.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found' });
     }
-    if (req.user && req.user.role !== 'super_admin' && req.user.adminId && existing.rows[0].admin_id !== req.user.adminId) {
+    if (!canAccessClient(existing.rows[0], req)) {
       return res.status(403).json({ error: 'Access denied' });
     }
     await pool.query('DELETE FROM clients WHERE id = $1 RETURNING id', [id]);

@@ -86,9 +86,10 @@ const getDeposit = async (req, res) => {
       return res.status(404).json({ error: 'Deposit request not found' });
     }
 
-    // Scope check: normal admins can't view other admins' client deposits
+    // Scope check: normal admins can't view other admins' client deposits.
+    // String comparison - see canAccessClient in adminClientsController.
     if (req.user && req.user.role !== 'super_admin' && req.user.adminId) {
-      if (result.rows[0].admin_id !== req.user.adminId) {
+      if (String(result.rows[0].admin_id) !== String(req.user.adminId)) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
