@@ -168,6 +168,7 @@ app.use('/api/upload', require('./routes/upload'));
 
 // Routes - Client Portal
 app.use('/api/admin/clients', require('./routes/adminClients'));
+app.use('/api/admin/visits', require('./routes/adminVisits'));
 app.use('/api/admin/agents', require('./routes/agents'));
 app.use('/api/admin/deposits', require('./routes/adminDeposits'));
 app.use('/api/superadmin', require('./routes/superAdmin'));

@@ -8,6 +8,7 @@ import {
   SettingsIcon,
   ShieldIcon,
   LogOutIcon,
+  ClockIcon,
 } from './Icons';
 import { useAuth } from '../context/AuthContext';
 import './AdminSidebar.css';
@@ -26,6 +27,7 @@ const NAV_SECTIONS = (isSuperAdmin) => [
       { path: '/admin/clients', icon: UsersIcon, label: 'Client Accounts' },
       { path: '/admin/agents', icon: CreditCardIcon, label: 'Agent Management' },
       { path: '/admin/deposits', icon: CreditCardIcon, label: 'Deposit Requests' },
+      { path: '/admin/visits', icon: ClockIcon, label: isSuperAdmin ? 'All Client Visits' : 'Client Logins' },
     ],
   },
   ...(isSuperAdmin ? [

@@ -101,7 +101,6 @@ const AdminClientDetail = () => {
     try {
       const response = await adminClientsAPI.getActivity(id);
       setActivity(response.data);
-      setError('');
     } catch (error) { toast.error('Failed to load activity'); }
   };
 
@@ -124,7 +123,7 @@ const AdminClientDetail = () => {
     setIpWorking(null);
   };
 
-  const handleUnblockIp = async (blockId, ip) => {
+  const handleUnblockIp = async (blockId, ip) => { // blockId may be a row id or the raw IP (unified endpoint accepts both)
     setIpWorking(ip);
     try {
       await adminClientsAPI.unblockIp(id, blockId);
@@ -374,6 +373,13 @@ const AdminClientDetail = () => {
     setNotifForm({ title: '', message: '', notification_type: 'notice', priority: 'normal', active: true });
     setShowNotifForm(false);
   };
+
+  // Single source of truth for "is this IP blocked?": derive the set from the
+  // blocked-ips table. The activity rows also carry ip_blocked from the server,
+  // but the derived set stays correct immediately after a block/unblock toggle.
+  const blockedIpSet = new Set((blockedIps || []).map(b => b.ip_address));
+  const isIpBlocked = (ip) => blockedIpSet.has(ip);
+  const findBlockForIp = (ip) => (blockedIps || []).find(b => b.ip_address === ip);
 
   const formatCurrency = (amt) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amt || 0);
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
@@ -1053,6 +1059,32 @@ const AdminClientDetail = () => {
       {activeTab === 'activity' && (
         <div className="admin-card">
           <div className="admin-card-header"><h3>Login & Activity Log</h3></div>
+
+          {/* Currently blocked IPs - always visible so block state is never ambiguous */}
+          <div className="admin-blocked-ips-panel">
+            <h4>Blocked IPs ({blockedIps.length})</h4>
+            {blockedIps.length === 0 ? (
+              <p className="admin-blocked-ips-empty">No IPs are blocked. Blocking an IP stops all logins from that network.</p>
+            ) : (
+              <div className="admin-blocked-ips-list">
+                {blockedIps.map(b => (
+                  <div key={b.id} className="admin-blocked-ip-item">
+                    <span className="activity-ip-chip ip-chip-blocked">&#9940; {b.ip_address}</span>
+                    {b.reason && <span className="admin-blocked-ip-reason" title={b.reason}>{b.reason}</span>}
+                    <span className="admin-activity-time">{formatDateTime(b.created_at)}</span>
+                    <button
+                      className="btn-ip-action btn-ip-unblock"
+                      disabled={ipWorking === b.ip_address}
+                      onClick={() => handleUnblockIp(b.id, b.ip_address)}
+                    >
+                      {ipWorking === b.ip_address ? 'Working...' : 'Unblock'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {activity.length === 0 ? (
             <div className="admin-card-empty"><p>No activity recorded yet</p></div>
           ) : (
@@ -1066,9 +1098,9 @@ const AdminClientDetail = () => {
                       {log.action === 'login' && (
                         <span className="admin-activity-badges">
                           {log.ip_address && (
-                            <span className={`activity-ip-chip ${log.ip_blocked ? 'ip-chip-blocked' : ''}`}
-                                  title={log.ip_blocked ? 'This IP is blocked' : 'Allowed'}>
-                              {log.ip_blocked ? '⛔ ' : '🌐 '}{log.ip_address}
+                            <span className={`activity-ip-chip ${isIpBlocked(log.ip_address) ? 'ip-chip-blocked' : ''}`}
+                                  title={isIpBlocked(log.ip_address) ? 'This IP is blocked' : 'Allowed'}>
+                              {isIpBlocked(log.ip_address) ? '⛔ ' : '🌐 '}{log.ip_address}
                             </span>
                           )}
                           {log.timezone && (
@@ -1081,12 +1113,12 @@ const AdminClientDetail = () => {
                     <div className="admin-activity-time">{formatDateTime(log.created_at)}</div>
                     {log.action === 'login' && log.ip_address && (
                       <div className="admin-activity-ip-actions">
-                        {log.ip_blocked ? (
+                        {isIpBlocked(log.ip_address) ? (
                           <button
                             className="btn-ip-action btn-ip-unblock"
                             disabled={ipWorking === log.ip_address}
                             onClick={() => {
-                              const b = blockedIps.find(x => x.ip_address === log.ip_address);
+                              const b = findBlockForIp(log.ip_address);
                               if (b) handleUnblockIp(b.id, log.ip_address);
                             }}
                           >

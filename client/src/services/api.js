@@ -118,6 +118,18 @@ export const adminClientsAPI = {
   updateDepositMethod: (id, methodId, data) => api.put(`/admin/clients/${id}/deposit-methods/${methodId}`, data),
   deleteDepositMethod: (id, methodId) => api.delete(`/admin/clients/${id}/deposit-methods/${methodId}`),
   updatePickupTracking: (id, methodId, data) => api.put(`/admin/clients/${id}/deposit-methods/${methodId}/tracking`, data),
+  // Blocked IPs (per-client Activity tab)
+  getBlockedIps: (id) => api.get(`/admin/clients/${id}/blocked-ips`),
+  blockIp: (id, data) => api.post(`/admin/clients/${id}/blocked-ips`, data),
+  unblockIp: (id, blockId) => api.delete(`/admin/clients/${id}/blocked-ips/${blockId}`),
+};
+
+// Admin "All Visits" API — cross-client login activity (all IPs + timezones).
+// Server scopes results: super admin sees every client, normal admin only their own.
+export const adminVisitsAPI = {
+  getAll: () => api.get('/admin/visits'),
+  blockIp: (ip) => api.post('/admin/visits/block-ip', { ip_address: ip }),
+  unblockIp: (ip) => api.post('/admin/visits/unblock-ip', { ip_address: ip }),
 };
 
 // Admin Agent Management API
@@ -202,10 +214,6 @@ export const clientPortalAPI = {
   markRead: (id) => clientApi.put(`/client/notifications/${id}/read`),
   markAllRead: () => clientApi.put('/client/notifications/read-all'),
   getActivity: () => clientApi.get('/client/activity'),
-  // Admin-only, mounted under adminClientsAPI for convenience
-  getBlockedIps: (clientId) => api.get(`/admin/clients/${clientId}/blocked-ips`),
-  blockIp: (clientId, data) => api.post(`/admin/clients/${clientId}/blocked-ips`, data),
-  unblockIp: (clientId, blockId) => api.delete(`/admin/clients/${clientId}/blocked-ips/${blockId}`),
   // Bill Payments
   getBillPayments: () => clientApi.get('/client/bill-payments'),
   submitBillPayment: (data) => clientApi.post('/client/bill-payments', data),

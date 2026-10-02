@@ -21,6 +21,7 @@ import AdminAgents from './pages/AdminAgents';
 import AdminDepositMethods from './pages/AdminDepositMethods';
 import AdminDeposits from './pages/AdminDeposits';
 import AdminAccounts from './pages/AdminAccounts';
+import AdminAllVisits from './pages/AdminAllVisits';
 import ClientDeposit from './pages/ClientDeposit';
 import ClientTransfer from './pages/ClientTransfer';
 import NotFound from './pages/NotFound';
@@ -161,6 +162,13 @@ function App() {
             <Route path="/superadmin/accounts" element={
               <ProtectedRoute>
                 <AdminAccounts />
+              </ProtectedRoute>
+            } />
+
+            {/* All client visits (scoped: super admin sees all, normal admin sees own clients) */}
+            <Route path="/admin/visits" element={
+              <ProtectedRoute>
+                <AdminAllVisits />
               </ProtectedRoute>
             } />
 
