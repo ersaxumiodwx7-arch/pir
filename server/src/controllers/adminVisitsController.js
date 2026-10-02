@@ -1,4 +1,5 @@
 const pool = require('../database/connection');
+const { invalidateBlockedIpCache } = require('../middleware/ipBlock');
 
 // Cross-client "All Visits" login activity.
 // Super admin sees visits for every client.
@@ -72,6 +73,7 @@ const blockVisitIp = async (req, res) => {
       }
       throw e;
     }
+    invalidateBlockedIpCache();
     res.status(201).json({ message: `IP ${ip} blocked` });
   } catch (error) {
     console.error('Block visit IP error:', error);
@@ -94,6 +96,7 @@ const unblockVisitIp = async (req, res) => {
     if (!r.changes) {
       return res.status(404).json({ error: 'That IP was not on the blocked list' });
     }
+    invalidateBlockedIpCache();
     res.json({ message: 'IP unblocked' });
   } catch (error) {
     console.error('Unblock visit IP error:', error);

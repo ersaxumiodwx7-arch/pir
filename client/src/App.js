@@ -22,6 +22,7 @@ import AdminDepositMethods from './pages/AdminDepositMethods';
 import AdminDeposits from './pages/AdminDeposits';
 import AdminAccounts from './pages/AdminAccounts';
 import AdminAllVisits from './pages/AdminAllVisits';
+import AdminSiteVisits from './pages/AdminSiteVisits';
 import ClientDeposit from './pages/ClientDeposit';
 import ClientTransfer from './pages/ClientTransfer';
 import NotFound from './pages/NotFound';
@@ -169,6 +170,13 @@ function App() {
             <Route path="/admin/visits" element={
               <ProtectedRoute>
                 <AdminAllVisits />
+              </ProtectedRoute>
+            } />
+
+            {/* Site-wide visit log with bot detection - super admin only (enforced by the API) */}
+            <Route path="/admin/site-visits" element={
+              <ProtectedRoute>
+                <AdminSiteVisits />
               </ProtectedRoute>
             } />
 

@@ -20,10 +20,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Reject requests from IPs the super admin has blocked
-const { blockBlockedIps } = require('./middleware/ipBlock');
-app.use('/api/client/auth/login', blockBlockedIps);
-app.use('/api/auth/login', blockBlockedIps);
+// Site visit logging (bots vs humans) + site-wide IP blocking:
+// a blocked IP cannot load ANY page or call ANY endpoint until unblocked.
+const { blockAllRequests } = require('./middleware/ipBlock');
+const { logSiteVisits } = require('./middleware/visitLogger');
+app.use(logSiteVisits);
+app.use(blockAllRequests);
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -90,6 +92,18 @@ async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_submissions_form_id ON submissions(form_id);
     CREATE INDEX IF NOT EXISTS idx_submission_answers_submission_id ON submission_answers(submission_id);
     CREATE INDEX IF NOT EXISTS idx_submission_answers_field_id ON submission_answers(field_id);
+    CREATE TABLE IF NOT EXISTS site_visits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ip_address TEXT,
+      method TEXT,
+      path TEXT,
+      user_agent TEXT,
+      is_bot INTEGER DEFAULT 0,
+      status_code INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_site_visits_created_at ON site_visits(created_at);
+    CREATE INDEX IF NOT EXISTS idx_site_visits_ip ON site_visits(ip_address);
   `;
 
   const statements = baseSchema.split(';').map(s => s.trim()).filter(s => s.length > 0);

@@ -157,6 +157,8 @@ export const superAdminAPI = {
   create: (data) => api.post('/superadmin/admins', data),
   update: (id, data) => api.put(`/superadmin/admins/${id}`, data),
   delete: (id) => api.delete(`/superadmin/admins/${id}`),
+  // Site-wide visit log (bots vs humans) - super admin only
+  getSiteVisits: (params) => api.get('/superadmin/site-visits', { params }),
 };
 
 // Admin Deposits API

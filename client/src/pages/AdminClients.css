@@ -2150,3 +2150,60 @@
   border-color: #2563eb;
   color: #fff;
 }
+
+/* Site Visits page (super admin only) */
+.admin-sv-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-sv-type-badge.bot {
+  background: rgba(168, 85, 247, 0.12);
+  color: #7e22ce;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.admin-sv-type-badge.human {
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.admin-sv-path {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  color: #334155;
+  word-break: break-all;
+}
+
+.admin-sv-ua {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.admin-sv-status {
+  display: inline-block;
+  min-width: 34px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-sv-status.ok { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.admin-sv-status.redirect { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+.admin-sv-status.warn { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+.admin-sv-status.error { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }

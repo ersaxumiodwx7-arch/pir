@@ -9,6 +9,7 @@ import {
   ShieldIcon,
   LogOutIcon,
   ClockIcon,
+  EyeIcon,
 } from './Icons';
 import { useAuth } from '../context/AuthContext';
 import './AdminSidebar.css';
@@ -35,6 +36,7 @@ const NAV_SECTIONS = (isSuperAdmin) => [
       label: 'Super Admin',
       items: [
         { path: '/superadmin/accounts', icon: SettingsIcon, label: 'Admin Accounts' },
+        { path: '/admin/site-visits', icon: EyeIcon, label: 'Site Visits (Bots)' },
       ],
     },
   ] : []),

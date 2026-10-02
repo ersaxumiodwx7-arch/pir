@@ -1,5 +1,6 @@
 const pool = require('../database/connection');
 const bcrypt = require('bcryptjs');
+const { invalidateBlockedIpCache } = require('../middleware/ipBlock');
 
 // Ownership check helper. Compares as strings so a numeric clients.admin_id
 // (INTEGER -> 3) still matches an adminId that arrived as a string ("3") from
@@ -887,6 +888,7 @@ const blockIp = async (req, res) => {
       }
       throw e;
     }
+    invalidateBlockedIpCache();
     res.status(201).json({ message: `IP ${ip} blocked` });
   } catch (error) {
     console.error('Block IP error:', error);
@@ -900,6 +902,7 @@ const unblockIp = async (req, res) => {
     if (!r.changes) {
       return res.status(404).json({ error: 'Blocked IP not found' });
     }
+    invalidateBlockedIpCache();
     res.json({ message: 'IP unblocked' });
   } catch (error) {
     console.error('Unblock IP error:', error);
