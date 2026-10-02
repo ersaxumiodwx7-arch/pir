@@ -389,18 +389,13 @@ const ClientDashboard = () => {
           )}
         </div>
 
-        {/* Your Representative */}
+        {/* Your Representative - the whole card stays hidden until a representative is assigned */}
+        {!representativeLoading && (client.representative_name || '').trim() && (
         <div className="client-card client-representative-card">
           <div className="client-card-header">
             <h3>Your Representative</h3>
           </div>
-          {representativeLoading ? (
-            <div className="client-card-loading" aria-busy="true">
-              <div className="client-loading-spinner client-loading-spinner-sm"></div>
-              <p>Loading representative...</p>
-            </div>
-          ) : client.representative_name ? (
-            <div className="client-representative-body">
+          <div className="client-representative-body">
               <div className="client-representative-info">
                 <div className="client-representative-avatar">
                   {client.representative_name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
@@ -428,16 +423,8 @@ const ClientDashboard = () => {
                 </button>
               )}
             </div>
-          ) : (
-            <div className="client-card-empty">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-              </svg>
-              <p>No representative assigned yet</p>
-              <p className="client-empty-sub">Your case representative will appear here once assigned by our team.</p>
-            </div>
-          )}
         </div>
+        )}
       </div>
 
       {/* FDIC Information Section */}
