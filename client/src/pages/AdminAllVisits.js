@@ -33,7 +33,7 @@ const AdminAllVisits = () => {
   };
 
   const handleBlock = async (ip) => {
-    if (!window.confirm(`Block IP ${ip}? Nobody will be able to log in from this network until it is unblocked.`)) return;
+    if (!window.confirm(`Block IP ${ip}? Nobody from this network will be able to open the site at all until it is unblocked.`)) return;
     setIpWorking(ip);
     try {
       await adminVisitsAPI.blockIp(ip);

@@ -12,32 +12,48 @@ function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// The page a blocked visitor gets instead of the site - no app code, no
-// assets, nothing else loads.
-function blockPage(ip) {
+// The "error" a blocked visitor gets instead of the site. It mimics a
+// generic browser/network failure (HTTP 404 + a Chrome-style "This site
+// can't be reached" page) so the block reads as "the site doesn't exist"
+// rather than as an intentional ban.
+function blockPage(host) {
+  const h = escapeHtml(host || 'this site');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Access Denied</title>
+<title>${h}</title>
 <style>
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-         background:#0f172a; color:#e2e8f0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; }
-  .box { max-width:440px; text-align:center; padding:40px 30px; }
-  .lock { font-size:46px; margin-bottom:14px; }
-  h1 { font-size:22px; margin:0 0 10px; color:#f87171; }
-  p { font-size:14px; line-height:1.6; color:#94a3b8; margin:0 0 6px; }
-  code { color:#cbd5e1; background:#1e293b; padding:2px 10px; border-radius:6px; font-size:13px; }
+  html, body { margin:0; padding:0; }
+  body { min-height:100vh; background:#fff; color:#202124;
+         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+         display:flex; align-items:center; }
+  .wrap { max-width:560px; margin:0 auto; padding:32px; width:100%; box-sizing:border-box; }
+  .icon { margin-bottom:24px; }
+  h1 { font-size:22px; font-weight:400; margin:0 0 12px; color:#202124; }
+  p { font-size:15px; line-height:1.6; margin:0 0 12px; color:#5f6368; }
+  .host { font-weight:700; color:#202124; }
+  .actions { margin-top:24px; }
+  .reload { -webkit-appearance:none; appearance:none; background:#1a73e8; color:#fff; border:0;
+            border-radius:4px; padding:9px 22px; font-size:14px; font-family:inherit; cursor:pointer; }
+  .code { margin-top:28px; font-size:12px; color:#9aa0a6; }
 </style>
 </head>
 <body>
-  <div class="box">
-    <div class="lock">&#9940;</div>
-    <h1>Access Denied</h1>
-    <p>Your network address has been blocked by the administrator.</p>
-    <p>If you believe this is a mistake, contact support from another network.</p>
-    <p><code>${escapeHtml(ip || 'unknown')}</code></p>
+  <div class="wrap">
+    <div class="icon">
+      <svg width="72" height="60" viewBox="0 0 72 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="36" cy="30" r="26" stroke="#dadce0" stroke-width="4"/>
+        <circle cx="27" cy="24" r="3.5" fill="#dadce0"/>
+        <circle cx="45" cy="24" r="3.5" fill="#dadce0"/>
+        <path d="M25 40c3-4 7-6 11-6s8 2 11 6" stroke="#dadce0" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>This site can't be reached</h1>
+    <p><span class="host">${h}</span>'s server IP address could not be found.</p>
+    <div class="actions"><button class="reload" onclick="location.reload()">Reload</button></div>
+    <p class="code">ERR_NAME_NOT_RESOLVED</p>
   </div>
 </body>
 </html>`;
@@ -105,10 +121,12 @@ const blockAllRequests = async (req, res, next) => {
   try {
     const blocked = (await getBlockedIpSet()).has(ip);
     if (blocked) {
-      return res.status(403)
+      // 404 + a browser-style "site can't be reached" page: to the visitor it
+      // looks like the site simply does not exist, not like a ban.
+      return res.status(404)
         .set('Cache-Control', 'no-store')
         .type('html')
-        .send(blockPage(ip));
+        .send(blockPage(req.hostname || (req.headers && req.headers.host)));
     }
     next();
   } catch (e) {
