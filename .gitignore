@@ -35,4 +35,9 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
-"pir/"  
+
+# Freebuff desktop app state (never commit)
+.freebuff/
+
+# Stray nested repo (this repo IS the project; never track an inner copy)
+pir/
