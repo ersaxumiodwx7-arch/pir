@@ -16,6 +16,16 @@ const getDashboard = async (req, res) => {
 
     const client = clientResult.rows[0];
 
+    // Bank accounts (primary balance is overlaid from the clients row)
+    const accountsResult = await pool.query(
+      'SELECT * FROM client_accounts WHERE client_id = $1 ORDER BY is_primary DESC, id ASC',
+      [clientId]
+    );
+    const accounts = accountsResult.rows.map(a => a.is_primary
+      ? { ...a, balance: client.balance, account_number: client.account_number || a.account_number, routing_number: client.routing_number || a.routing_number }
+      : { ...a, balance: parseFloat(a.balance) || 0 });
+    const totalBalance = accounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
+
     // Recent transactions
     const transactions = await pool.query(
       'SELECT * FROM client_transactions WHERE client_id = $1 ORDER BY created_at DESC LIMIT 5',
@@ -74,6 +84,7 @@ const getDashboard = async (req, res) => {
 
     res.json({
       client,
+      accounts,
       recent_transactions: transactions.rows,
       unread_count: parseInt(unreadCount.rows[0].count),
       recent_notifications: notifications.rows,
@@ -82,6 +93,7 @@ const getDashboard = async (req, res) => {
         total_credit: parseFloat(totalCredit.rows[0].total),
         total_debit: parseFloat(totalDebit.rows[0].total),
         balance: client.balance,
+        total_balance: totalBalance,
         processing_balance: processingBalance
       }
     });
@@ -112,42 +124,71 @@ const getAccountDetails = async (req, res) => {
   }
 };
 
+// Get the client's bank accounts
+const getAccounts = async (req, res) => {
+  try {
+    const clientId = req.client.clientId;
+    const clientResult = await pool.query(
+      'SELECT id, display_balance, account_number, routing_number FROM clients WHERE id = $1',
+      [clientId]
+    );
+    if (clientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    const client = clientResult.rows[0];
+    const accountsResult = await pool.query(
+      'SELECT * FROM client_accounts WHERE client_id = $1 ORDER BY is_primary DESC, id ASC',
+      [clientId]
+    );
+    const accounts = accountsResult.rows.map(a => a.is_primary
+      ? { ...a, balance: parseFloat(client.display_balance) || 0, account_number: client.account_number || a.account_number, routing_number: client.routing_number || a.routing_number }
+      : { ...a, balance: parseFloat(a.balance) || 0 });
+    res.json(accounts);
+  } catch (error) {
+    console.error('Get accounts error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 // Get transactions (client view - only their own)
 const getTransactions = async (req, res) => {
   try {
     const clientId = req.client.clientId;
     const { type, status, from_date, to_date } = req.query;
 
-    let whereClause = 'WHERE client_id = $1';
+    let whereClause = 'WHERE t.client_id = $1';
     const params = [clientId];
     let paramIndex = 2;
 
     if (type === 'credit') {
-      whereClause += ` AND credit_amount > 0`;
+      whereClause += ` AND t.credit_amount > 0`;
     } else if (type === 'debit') {
-      whereClause += ` AND debit_amount > 0`;
+      whereClause += ` AND t.debit_amount > 0`;
     }
 
     if (status) {
-      whereClause += ` AND status = $${paramIndex}`;
+      whereClause += ` AND t.status = $${paramIndex}`;
       params.push(status);
       paramIndex++;
     }
 
     if (from_date) {
-      whereClause += ` AND created_at >= $${paramIndex}`;
+      whereClause += ` AND t.created_at >= $${paramIndex}`;
       params.push(from_date);
       paramIndex++;
     }
 
     if (to_date) {
-      whereClause += ` AND created_at <= $${paramIndex}`;
+      whereClause += ` AND t.created_at <= $${paramIndex}`;
       params.push(to_date);
       paramIndex++;
     }
 
     const result = await pool.query(
-      `SELECT * FROM client_transactions ${whereClause} ORDER BY created_at DESC`,
+      `SELECT t.*, ca.account_number as txn_account_number, ca.account_name as txn_account_name, ca.account_type as txn_account_type
+       FROM client_transactions t
+       LEFT JOIN client_accounts ca ON t.account_id = ca.id
+       ${whereClause} ORDER BY t.created_at DESC`,
       params
     );
 
@@ -318,7 +359,7 @@ const submitBillPayment = async (req, res) => {
 };
 
 module.exports = {
-  getDashboard, getAccountDetails, getTransactions,
+  getDashboard, getAccountDetails, getTransactions, getAccounts,
   getDocuments, getNotifications, markNotificationRead, markAllNotificationsRead,
   getActivity, getBillPayments, submitBillPayment
 };

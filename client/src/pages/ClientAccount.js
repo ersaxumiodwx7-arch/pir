@@ -4,6 +4,7 @@ import './ClientPages.css';
 
 const ClientAccount = () => {
   const [account, setAccount] = useState(null);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savingPassword, setSavingPassword] = useState(false);
@@ -18,6 +19,12 @@ const ClientAccount = () => {
     try {
       const response = await clientPortalAPI.getAccount();
       setAccount(response.data);
+      try {
+        const accts = await clientPortalAPI.getAccounts();
+        setAccounts(accts.data || []);
+      } catch (e) {
+        // Accounts list is a nice-to-have - keep the page working without it
+      }
     } catch (err) {
       console.error('Failed to load account:', err);
       setError("We couldn't load your account details. Please try again.");
@@ -79,6 +86,35 @@ const ClientAccount = () => {
       </div>
 
       <div className="client-account-grid">
+        {/* Bank Accounts */}
+        <div className="client-card" style={{ gridColumn: '1 / -1' }}>
+          <div className="client-card-header">
+            <h3>Your Accounts</h3>
+          </div>
+          <div className="client-detail-list">
+            {accounts.map((acc, idx) => {
+              const typeLabel = String(acc.account_type || 'checking').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+              return (
+                <div className="client-detail-row" key={acc.id || idx}>
+                  <span className="client-detail-label">
+                    {acc.account_name || `${typeLabel} Account`}
+                    <span style={{ display: 'block', fontSize: '12px', color: '#64748b', fontFamily: 'monospace', letterSpacing: '0.06em', marginTop: '2px' }}>
+                      {typeLabel} •••• {String(acc.account_number || '').slice(-4) || '—'}
+                      {acc.is_primary ? ' · Primary' : ''}
+                    </span>
+                  </span>
+                  <span className="client-detail-value" style={{ textAlign: 'right' }}>
+                    <span className="client-detail-balance" style={{ display: 'block' }}>${parseFloat(acc.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: acc.status === 'frozen' ? '#f59e0b' : acc.status === 'closed' ? '#94a3b8' : '#10b981' }}>
+                      {acc.status || 'active'}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Profile Card */}
         <div className="client-card client-profile-card">
           <div className="client-profile-avatar">

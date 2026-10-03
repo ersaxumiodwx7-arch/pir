@@ -153,12 +153,27 @@ const ClientDashboard = () => {
     ? `https://maps.google.com/maps?q=${branchCoords.lat},${branchCoords.lng}&z=16&output=embed`
     : null;
 
+  // ===== Accounts =====
+  const accounts = (Array.isArray(data.accounts) && data.accounts.length) ? data.accounts : [{
+    id: 0, is_primary: 1, account_type: 'checking', account_name: 'Primary Checking',
+    account_number: client.account_number, balance: summary.balance, status: client.account_status
+  }];
+  const totalBalance = accounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
+  const primaryAccount = accounts.find(a => a.is_primary) || accounts[0];
+  const ACCOUNT_META = {
+    checking: { label: 'Checking', color: '#2563eb', bg: '#eff6ff' },
+    savings: { label: 'Savings', color: '#059669', bg: '#ecfdf5' },
+    money_market: { label: 'Money Market', color: '#7c3aed', bg: '#f5f3ff' },
+    business: { label: 'Business', color: '#d97706', bg: '#fffbeb' },
+  };
+  const accountMeta = (type) => ACCOUNT_META[type] || ACCOUNT_META.checking;
+
   return (
     <div className="client-dashboard">
       <div className="client-page-header">
         <div>
           <h1>Welcome back, {client.full_name?.split(' ')[0]}</h1>
-          <p className="client-page-subtitle">Here's your account overview</p>
+          <p className="client-page-subtitle">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
         </div>
         <div className="client-header-badges">
           <span className="client-badge" style={{ borderColor: getStatusColor(client.account_status) }}>
@@ -248,8 +263,8 @@ const ClientDashboard = () => {
           </svg>
         </div>
         <div className="client-balance-content">
-          <div className="client-balance-label">Available Balance</div>
-          <div className="client-balance-amount">{formatCurrency(summary.balance)}</div>
+          <div className="client-balance-label">Total Balance</div>
+          <div className="client-balance-amount">{formatCurrency(totalBalance)}</div>
           {summary.processing_balance > 0 && (
             <div className="client-processing-balance">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -260,9 +275,54 @@ const ClientDashboard = () => {
             </div>
           )}
           <div className="client-balance-meta">
-            <span>Total Credits: <strong>{formatCurrency(summary.total_credit)}</strong></span>
-            <span>Total Debits: <strong>{formatCurrency(summary.total_debit)}</strong></span>
+            <span>{accounts.length} account{accounts.length === 1 ? '' : 's'}</span>
+            <span>Primary •••• {String(primaryAccount?.account_number || client.account_number || '').slice(-4) || '—'}</span>
           </div>
+          <div className="client-balance-actions">
+            <Link to="/client/deposit" className="client-balance-action">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+              Deposit
+            </Link>
+            <Link to="/client/transfer" className="client-balance-action">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              Transfer
+            </Link>
+            <Link to="/client/bill-pay" className="client-balance-action">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              Pay Bills
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* My Accounts */}
+      <div className="client-card client-accounts-card">
+        <div className="client-card-header">
+          <h3>My Accounts</h3>
+          <Link to="/client/account" className="client-card-link">Account Details →</Link>
+        </div>
+        <div className="client-accounts-list">
+          {accounts.map((acc, idx) => {
+            const meta = accountMeta(acc.account_type);
+            return (
+              <div className="client-account-row" key={acc.id || idx}>
+                <div className="client-account-icon" style={{ background: meta.bg, color: meta.color }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-6h6v6"/></svg>
+                </div>
+                <div className="client-account-info">
+                  <div className="client-account-name">
+                    {acc.account_name || `${meta.label} Account`}
+                    {acc.is_primary ? <span className="client-account-primary-tag">Primary</span> : null}
+                  </div>
+                  <div className="client-account-number">{meta.label} •••• {String(acc.account_number || '').slice(-4) || '—'}</div>
+                </div>
+                <div className="client-account-right">
+                  <div className="client-account-balance">{formatCurrency(acc.balance)}</div>
+                  <span className={`client-account-status status-${acc.status || 'active'}`}>{acc.status || 'active'}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

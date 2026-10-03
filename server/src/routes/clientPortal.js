@@ -6,7 +6,7 @@ const {
 } = require('../controllers/clientAuthController');
 const { verifyAgent } = require('../controllers/agentsController');
 const {
-  getDashboard, getAccountDetails, getTransactions,
+  getDashboard, getAccountDetails, getTransactions, getAccounts,
   getDocuments, getNotifications, markNotificationRead, markAllNotificationsRead,
   getActivity, getBillPayments, submitBillPayment
 } = require('../controllers/clientPortalController');
@@ -23,6 +23,7 @@ router.post('/auth/change-password', clientAuth, changePassword);
 // Dashboard
 router.get('/dashboard', clientAuth, getDashboard);
 router.get('/account', clientAuth, getAccountDetails);
+router.get('/accounts', clientAuth, getAccounts);
 router.get('/transactions', clientAuth, getTransactions);
 router.get('/documents', clientAuth, getDocuments);
 

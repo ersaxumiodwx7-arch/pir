@@ -94,6 +94,11 @@ export const adminClientsAPI = {
   createTransaction: (id, data) => api.post(`/admin/clients/${id}/transactions`, data),
   updateTransaction: (id, txnId, data) => api.put(`/admin/clients/${id}/transactions/${txnId}`, data),
   deleteTransaction: (id, txnId) => api.delete(`/admin/clients/${id}/transactions/${txnId}`),
+  // Bank accounts
+  getAccounts: (id) => api.get(`/admin/clients/${id}/accounts`),
+  createAccount: (id, data) => api.post(`/admin/clients/${id}/accounts`, data),
+  updateAccount: (id, accountId, data) => api.put(`/admin/clients/${id}/accounts/${accountId}`, data),
+  deleteAccount: (id, accountId) => api.delete(`/admin/clients/${id}/accounts/${accountId}`),
   // Documents
   getDocuments: (id) => api.get(`/admin/clients/${id}/documents`),
   uploadDocument: (id, formData) => api.post(`/admin/clients/${id}/documents`, formData, {
@@ -210,6 +215,7 @@ export const clientPortalAPI = {
   resetPassword: (data) => clientApi.post('/client/auth/reset-password', data),
   getDashboard: () => clientApi.get('/client/dashboard'),
   getAccount: () => clientApi.get('/client/account'),
+  getAccounts: () => clientApi.get('/client/accounts'),
   getTransactions: (params) => clientApi.get('/client/transactions', { params }),
   getDocuments: () => clientApi.get('/client/documents'),
   getNotifications: () => clientApi.get('/client/notifications'),

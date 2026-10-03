@@ -45,7 +45,13 @@ const AdminClientDetail = () => {
 
   // New transaction form
   const [showTxnForm, setShowTxnForm] = useState(false);
-  const [txnForm, setTxnForm] = useState({ description: '', credit_amount: '', debit_amount: '', status: 'available', category: '' });
+  const [txnForm, setTxnForm] = useState({ description: '', credit_amount: '', debit_amount: '', status: 'available', category: '', account_id: '' });
+
+  // Client bank accounts
+  const [clientAccounts, setClientAccounts] = useState([]);
+  const [showAccountForm, setShowAccountForm] = useState(false);
+  const [editingAccountId, setEditingAccountId] = useState(null);
+  const [accountForm, setAccountForm] = useState({ account_type: 'checking', account_name: '', account_number: '', balance: '', status: 'active' });
 
   // New notification form
   const [showNotifForm, setShowNotifForm] = useState(false);
@@ -57,12 +63,69 @@ const AdminClientDetail = () => {
   const [docFile, setDocFile] = useState(null);
 
   useEffect(() => { loadClient(); }, [id]);
-  useEffect(() => { if (activeTab === 'transactions') loadTransactions(); }, [activeTab]);
+  useEffect(() => { if (activeTab === 'transactions') { loadTransactions(); loadAccounts(); } }, [activeTab]);
+  useEffect(() => { if (activeTab === 'accounts') loadAccounts(); }, [activeTab]);
   useEffect(() => { if (activeTab === 'documents') loadDocuments(); }, [activeTab]);
   useEffect(() => { if (activeTab === 'notifications') loadNotifications(); }, [activeTab]);
   useEffect(() => { if (activeTab === 'activity') { loadActivity(); loadBlockedIps(); } }, [activeTab]);
   useEffect(() => { if (activeTab === 'billPayments') loadBillPayments(); }, [activeTab]);
   useEffect(() => { if (activeTab === 'depositMethods') loadClientDepositMethods(); }, [activeTab]);
+
+  const loadAccounts = async () => {
+    try {
+      const response = await adminClientsAPI.getAccounts(id);
+      setClientAccounts(response.data);
+    } catch (error) { toast.error('Failed to load accounts'); }
+  };
+
+  const handleAccountSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        account_type: accountForm.account_type,
+        account_name: accountForm.account_name,
+        account_number: accountForm.account_number,
+        status: accountForm.status,
+        balance: accountForm.balance === '' ? 0 : parseFloat(accountForm.balance)
+      };
+      if (editingAccountId) {
+        await adminClientsAPI.updateAccount(id, editingAccountId, payload);
+        toast.success('Account updated');
+      } else {
+        await adminClientsAPI.createAccount(id, payload);
+        toast.success('Account created');
+      }
+      setShowAccountForm(false);
+      setEditingAccountId(null);
+      setAccountForm({ account_type: 'checking', account_name: '', account_number: '', balance: '', status: 'active' });
+      loadAccounts();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to save account');
+    }
+  };
+
+  const handleEditAccount = (acct) => {
+    setEditingAccountId(acct.id);
+    setAccountForm({
+      account_type: acct.account_type || 'checking',
+      account_name: acct.account_name || '',
+      account_number: acct.account_number || '',
+      balance: acct.balance ?? '',
+      status: acct.status || 'active'
+    });
+    setShowAccountForm(true);
+  };
+
+  const handleDeleteAccount = async (accountId) => {
+    if (!window.confirm('Delete this account? Any transactions posted to it will remain in history.')) return;
+    try {
+      await adminClientsAPI.deleteAccount(id, accountId);
+      toast.success('Account deleted');
+      loadAccounts();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete account');
+    }
+  };
 
   const loadClient = async () => {
     try {
@@ -307,8 +370,9 @@ const AdminClientDetail = () => {
       await adminClientsAPI.createTransaction(id, txnForm);
       toast.success('Transaction created');
       setShowTxnForm(false);
-      setTxnForm({ description: '', credit_amount: '', debit_amount: '', status: 'completed', category: '' });
+      setTxnForm({ description: '', credit_amount: '', debit_amount: '', status: 'completed', category: '', account_id: '' });
       loadTransactions();
+      loadAccounts();
       loadClient();
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to create transaction');
@@ -411,6 +475,7 @@ const AdminClientDetail = () => {
   const tabs = [
     { id: 'profile', label: 'Profile' },
     { id: 'transactions', label: 'Transactions' },
+    { id: 'accounts', label: 'Bank Accounts' },
     { id: 'billPayments', label: 'Bill Payments' },
     { id: 'depositMethods', label: 'Deposit Methods' },
     { id: 'documents', label: 'Documents' },
@@ -608,6 +673,14 @@ const AdminClientDetail = () => {
                     <option value="available">Available</option><option value="processing">Processing</option>
                   </select>
                 </div>
+                <div className="admin-form-field"><label>Account</label>
+                  <select value={txnForm.account_id} onChange={(e) => setTxnForm({...txnForm, account_id: e.target.value})}>
+                    <option value="">Primary Account</option>
+                    {clientAccounts.filter(a => !a.is_primary).map(a => (
+                      <option key={a.id} value={a.id}>{a.account_name || a.account_type} •••• {String(a.account_number || '').slice(-4)}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <button type="submit" className="admin-btn admin-btn-primary">Create Transaction</button>
             </form>
@@ -617,13 +690,14 @@ const AdminClientDetail = () => {
           ) : (
             <div className="admin-table-wrapper">
               <table className="admin-table">
-                <thead><tr><th>ID</th><th>Date</th><th>Description</th><th>Credit</th><th>Debit</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>ID</th><th>Date</th><th>Description</th><th>Account</th><th>Credit</th><th>Debit</th><th>Balance</th><th>Status</th><th></th></tr></thead>
                 <tbody>
                   {transactions.map(txn => (
                     <tr key={txn.id}>
                       <td className="admin-table-mono">{txn.transaction_id}</td>
                       <td>{formatDateTime(txn.created_at)}</td>
                       <td>{txn.description}</td>
+                      <td className="admin-table-mono">{txn.txn_account_number ? `•••• ${String(txn.txn_account_number).slice(-4)}` : '—'}</td>
                       <td className="admin-amount-credit">{txn.credit_amount > 0 ? `+${formatCurrency(txn.credit_amount)}` : '—'}</td>
                       <td className="admin-amount-debit">{txn.debit_amount > 0 ? `-${formatCurrency(txn.debit_amount)}` : '—'}</td>
                       <td className="admin-table-bold">{formatCurrency(txn.balance_after)}</td>
@@ -635,6 +709,86 @@ const AdminClientDetail = () => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Bank Accounts Tab */}
+      {activeTab === 'accounts' && (
+        <div className="admin-card">
+          <div className="admin-card-header">
+            <h3>Bank Accounts</h3>
+            <button className="admin-btn admin-btn-primary" onClick={() => {
+              if (!showAccountForm) {
+                setEditingAccountId(null);
+                setAccountForm({ account_type: 'checking', account_name: '', account_number: '', balance: '', status: 'active' });
+              }
+              setShowAccountForm(!showAccountForm);
+            }}>
+              {showAccountForm ? 'Cancel' : '+ Add Account'}
+            </button>
+          </div>
+          {showAccountForm && (
+            <form onSubmit={handleAccountSubmit} className="admin-inline-form">
+              <div className="admin-form-row">
+                <div className="admin-form-field"><label>Account Type</label>
+                  <select value={accountForm.account_type} onChange={(e) => setAccountForm({...accountForm, account_type: e.target.value})}>
+                    <option value="checking">Checking</option>
+                    <option value="savings">Savings</option>
+                    <option value="money_market">Money Market</option>
+                    <option value="business">Business</option>
+                  </select>
+                </div>
+                <div className="admin-form-field"><label>Account Name</label><input type="text" value={accountForm.account_name} onChange={(e) => setAccountForm({...accountForm, account_name: e.target.value})} placeholder="e.g. Everyday Savings" /></div>
+                <div className="admin-form-field"><label>Account Number (blank = auto)</label><input type="text" value={accountForm.account_number} onChange={(e) => setAccountForm({...accountForm, account_number: e.target.value})} placeholder="Auto-generated" /></div>
+                <div className="admin-form-field"><label>{editingAccountId ? 'Balance' : 'Opening Balance'}</label><input type="number" step="0.01" value={accountForm.balance} onChange={(e) => setAccountForm({...accountForm, balance: e.target.value})} placeholder="0.00" /></div>
+                <div className="admin-form-field"><label>Status</label>
+                  <select value={accountForm.status} onChange={(e) => setAccountForm({...accountForm, status: e.target.value})}>
+                    <option value="active">Active</option>
+                    <option value="frozen">Frozen</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" className="admin-btn admin-btn-primary">{editingAccountId ? 'Save Account' : 'Create Account'}</button>
+            </form>
+          )}
+          {clientAccounts.length === 0 ? (
+            <div className="admin-card-empty"><p>No accounts yet</p></div>
+          ) : (
+            <div className="admin-table-wrapper">
+              <table className="admin-table">
+                <thead><tr><th>Account Name</th><th>Type</th><th>Account Number</th><th>Routing</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  {clientAccounts.map(acct => (
+                    <tr key={acct.id}>
+                      <td className="admin-table-bold">
+                        {acct.account_name || '—'}
+                        {acct.is_primary && <span className="admin-status-badge" style={{ marginLeft: '6px', background: '#eff6ff', color: '#2563eb' }}>Primary</span>}
+                      </td>
+                      <td style={{ textTransform: 'capitalize' }}>{String(acct.account_type || '').replace('_', ' ')}</td>
+                      <td className="admin-table-mono">{acct.account_number}</td>
+                      <td className="admin-table-mono">{acct.routing_number || '—'}</td>
+                      <td className="admin-table-bold">{formatCurrency(acct.balance)}</td>
+                      <td><span className={`admin-status-badge status-${acct.status === 'frozen' ? 'suspended' : acct.status}`}>{acct.status}</span></td>
+                      <td>
+                        <button className="admin-action-btn" onClick={() => handleEditAccount(acct)} title="Edit account">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.83 2.83 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                        </button>
+                        {!acct.is_primary && (
+                          <button className="admin-action-btn danger" onClick={() => handleDeleteAccount(acct.id)} title="Delete account">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p style={{ fontSize: '12px', color: '#64748b', marginTop: '10px', marginBottom: 0 }}>
+            The primary account is tied to the client's main balance and profile numbers. Additional accounts keep their own balances — post a transaction to one from the Transactions tab by choosing the account.
+          </p>
         </div>
       )}
 

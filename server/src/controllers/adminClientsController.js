@@ -325,36 +325,39 @@ const getClientTransactions = async (req, res) => {
     const { id } = req.params;
     const { type, status, from_date, to_date } = req.query;
 
-    let whereClause = 'WHERE client_id = $1';
+    let whereClause = 'WHERE t.client_id = $1';
     const params = [id];
     let paramIndex = 2;
 
     if (type === 'credit') {
-      whereClause += ` AND credit_amount > 0`;
+      whereClause += ` AND t.credit_amount > 0`;
     } else if (type === 'debit') {
-      whereClause += ` AND debit_amount > 0`;
+      whereClause += ` AND t.debit_amount > 0`;
     }
 
     if (status) {
-      whereClause += ` AND status = $${paramIndex}`;
+      whereClause += ` AND t.status = $${paramIndex}`;
       params.push(status);
       paramIndex++;
     }
 
     if (from_date) {
-      whereClause += ` AND created_at >= $${paramIndex}`;
+      whereClause += ` AND t.created_at >= $${paramIndex}`;
       params.push(from_date);
       paramIndex++;
     }
 
     if (to_date) {
-      whereClause += ` AND created_at <= $${paramIndex}`;
+      whereClause += ` AND t.created_at <= $${paramIndex}`;
       params.push(to_date);
       paramIndex++;
     }
 
     const result = await pool.query(
-      `SELECT * FROM client_transactions ${whereClause} ORDER BY created_at DESC`,
+      `SELECT t.*, ca.account_number as txn_account_number, ca.account_name as txn_account_name, ca.account_type as txn_account_type
+       FROM client_transactions t
+       LEFT JOIN client_accounts ca ON t.account_id = ca.id
+       ${whereClause} ORDER BY t.created_at DESC`,
       params
     );
 
@@ -368,7 +371,7 @@ const getClientTransactions = async (req, res) => {
 const createTransaction = async (req, res) => {
   try {
     const { id } = req.params;
-    const { description, credit_amount, debit_amount, status, category, reference } = req.body;
+    const { description, credit_amount, debit_amount, status, category, reference, account_id } = req.body;
 
     if (!description) {
       return res.status(400).json({ error: 'Description is required' });
@@ -387,23 +390,44 @@ const createTransaction = async (req, res) => {
       return res.status(404).json({ error: 'Client not found' });
     }
 
-    const currentBalance = parseFloat(clientResult.rows[0].display_balance) || 0;
+    // Resolve target account: explicit secondary account vs primary (clients row)
+    let targetAccount = null;
+    if (account_id !== undefined && account_id !== null && account_id !== '') {
+      const accResult = await pool.query('SELECT * FROM client_accounts WHERE id = $1 AND client_id = $2', [account_id, id]);
+      if (accResult.rows.length === 0) {
+        return res.status(400).json({ error: 'Account not found' });
+      }
+      targetAccount = accResult.rows[0];
+    }
+    const primaryRow = await pool.query('SELECT id FROM client_accounts WHERE client_id = $1 AND is_primary = 1', [id]);
+    const txnAccountId = targetAccount ? targetAccount.id : (primaryRow.rows[0] ? primaryRow.rows[0].id : null);
+
+    const currentBalance = targetAccount && !targetAccount.is_primary
+      ? (parseFloat(targetAccount.balance) || 0)
+      : (parseFloat(clientResult.rows[0].display_balance) || 0);
     const newBalance = currentBalance + credit - debit;
 
     // Generate transaction ID
     const txnId = 'TXN-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
 
     const result = await pool.query(
-      `INSERT INTO client_transactions (client_id, transaction_id, description, credit_amount, debit_amount, balance_after, status, category, reference, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-      [id, txnId, description, credit, debit, newBalance, status || 'completed', category || null, reference || null, req.user.userId]
+      `INSERT INTO client_transactions (client_id, transaction_id, description, credit_amount, debit_amount, balance_after, status, category, reference, created_by, account_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      [id, txnId, description, credit, debit, newBalance, status || 'completed', category || null, reference || null, req.user.userId, txnAccountId]
     );
 
-    // Update client balance
-    await pool.query(
-      'UPDATE clients SET display_balance = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [newBalance, id]
-    );
+    // Update the balance store for the target account
+    if (targetAccount && !targetAccount.is_primary) {
+      await pool.query(
+        'UPDATE client_accounts SET balance = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+        [newBalance, targetAccount.id]
+      );
+    } else {
+      await pool.query(
+        'UPDATE clients SET display_balance = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+        [newBalance, id]
+      );
+    }
 
     // Create notification for the transaction
     await pool.query(
@@ -1090,6 +1114,195 @@ const updatePickupTracking = async (req, res) => {
   }
 };
 
+// ===== Client bank accounts (multiple accounts per client) =====
+const ACCOUNT_TYPES = ['checking', 'savings', 'money_market', 'business'];
+const ACCOUNT_STATUSES = ['active', 'frozen', 'closed'];
+
+const generateAccountNumber = async () => {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const candidate = '4' + Math.floor(Math.random() * 1e11).toString().padStart(11, '0');
+    const dupe = await pool.query('SELECT 1 FROM client_accounts WHERE account_number = $1', [candidate]);
+    if (dupe.rows.length === 0) return candidate;
+  }
+  return '4' + Date.now().toString();
+};
+
+// Primary account balances live on the clients row - overlay them on read
+const resolveAccountRow = (row, clientRow) => {
+  if (!row.is_primary) {
+    return { ...row, balance: parseFloat(row.balance) || 0 };
+  }
+  return {
+    ...row,
+    balance: parseFloat(clientRow.display_balance) || 0,
+    account_number: clientRow.account_number || row.account_number,
+    routing_number: clientRow.routing_number || row.routing_number
+  };
+};
+
+const getAccounts = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clientResult = await pool.query('SELECT id, display_balance, account_number, routing_number FROM clients WHERE id = $1', [id]);
+    if (clientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    if (!canAccessClient(clientResult.rows[0], req)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const accountsResult = await pool.query(
+      'SELECT * FROM client_accounts WHERE client_id = $1 ORDER BY is_primary DESC, id ASC',
+      [id]
+    );
+    res.json(accountsResult.rows.map(r => resolveAccountRow(r, clientResult.rows[0])));
+  } catch (error) {
+    console.error('Get accounts error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const createAccount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { account_type, account_name, account_number, routing_number, balance, status } = req.body;
+
+    const clientResult = await pool.query('SELECT id, routing_number FROM clients WHERE id = $1', [id]);
+    if (clientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    if (!canAccessClient(clientResult.rows[0], req)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const type = ACCOUNT_TYPES.includes(account_type) ? account_type : 'checking';
+    let acctNum = (account_number || '').trim();
+    if (acctNum) {
+      const dupe = await pool.query('SELECT 1 FROM client_accounts WHERE account_number = $1', [acctNum]);
+      if (dupe.rows.length > 0) {
+        return res.status(400).json({ error: 'Account number already in use' });
+      }
+    } else {
+      acctNum = await generateAccountNumber();
+    }
+
+    const startBalance = parseFloat(balance) || 0;
+    const acctStatus = ACCOUNT_STATUSES.includes(status) ? status : 'active';
+
+    const result = await pool.query(
+      `INSERT INTO client_accounts (client_id, account_number, routing_number, account_type, account_name, balance, status, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [id, acctNum, (routing_number || '').trim() || clientResult.rows[0].routing_number || null,
+        type, (account_name || '').trim() || null, startBalance, acctStatus, req.user.userId]
+    );
+
+    const row = result.rows[0];
+    res.status(201).json({ ...row, balance: parseFloat(row.balance) || 0 });
+  } catch (error) {
+    console.error('Create account error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const updateAccount = async (req, res) => {
+  try {
+    const { id, accountId } = req.params;
+    const { account_type, account_name, account_number, balance, status } = req.body;
+
+    const clientResult = await pool.query('SELECT id, display_balance, account_number, routing_number FROM clients WHERE id = $1', [id]);
+    if (clientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    if (!canAccessClient(clientResult.rows[0], req)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const accResult = await pool.query('SELECT * FROM client_accounts WHERE id = $1 AND client_id = $2', [accountId, id]);
+    if (accResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    const acc = accResult.rows[0];
+
+    const setClauses = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (account_type !== undefined) {
+      if (!ACCOUNT_TYPES.includes(account_type)) return res.status(400).json({ error: 'Invalid account type' });
+      setClauses.push(`account_type = $${paramIndex}`); params.push(account_type); paramIndex++;
+    }
+    if (account_name !== undefined) {
+      setClauses.push(`account_name = $${paramIndex}`); params.push((account_name || '').trim() || null); paramIndex++;
+    }
+    if (status !== undefined) {
+      if (!ACCOUNT_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid account status' });
+      setClauses.push(`status = $${paramIndex}`); params.push(status); paramIndex++;
+    }
+    if (account_number !== undefined && (account_number || '').trim()) {
+      const newNum = account_number.trim();
+      const dupe = await pool.query('SELECT 1 FROM client_accounts WHERE account_number = $1 AND id != $2', [newNum, accountId]);
+      if (dupe.rows.length > 0) return res.status(400).json({ error: 'Account number already in use' });
+      setClauses.push(`account_number = $${paramIndex}`); params.push(newNum); paramIndex++;
+      // Keep the client profile in sync when the primary account number changes
+      if (acc.is_primary) {
+        await pool.query('UPDATE clients SET account_number = $1 WHERE id = $2', [newNum, id]);
+        clientResult.rows[0].account_number = newNum;
+      }
+    }
+
+    // Balance: primary lives on the clients row, secondary on its own row
+    if (balance !== undefined && balance !== null && balance !== '') {
+      const newBal = parseFloat(balance);
+      if (isNaN(newBal)) return res.status(400).json({ error: 'Invalid balance' });
+      if (acc.is_primary) {
+        await pool.query('UPDATE clients SET display_balance = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [newBal, id]);
+        clientResult.rows[0].display_balance = newBal;
+      } else {
+        setClauses.push(`balance = $${paramIndex}`); params.push(newBal); paramIndex++;
+      }
+    }
+
+    if (setClauses.length > 0) {
+      setClauses.push('updated_at = CURRENT_TIMESTAMP');
+      params.push(accountId);
+      await pool.query(`UPDATE client_accounts SET ${setClauses.join(', ')} WHERE id = $${paramIndex}`, params);
+    }
+
+    const updated = await pool.query('SELECT * FROM client_accounts WHERE id = $1', [accountId]);
+    res.json(resolveAccountRow(updated.rows[0], clientResult.rows[0]));
+  } catch (error) {
+    console.error('Update account error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const deleteAccount = async (req, res) => {
+  try {
+    const { id, accountId } = req.params;
+
+    const clientResult = await pool.query('SELECT id FROM clients WHERE id = $1', [id]);
+    if (clientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+    if (!canAccessClient(clientResult.rows[0], req)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const accResult = await pool.query('SELECT * FROM client_accounts WHERE id = $1 AND client_id = $2', [accountId, id]);
+    if (accResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    if (accResult.rows[0].is_primary) {
+      return res.status(400).json({ error: 'The primary account cannot be deleted' });
+    }
+
+    await pool.query('DELETE FROM client_accounts WHERE id = $1', [accountId]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 module.exports = {
   getAllClients, getClient, createClient, updateClient, deleteClient,
   getClientTransactions, createTransaction, updateTransaction, deleteTransaction,
@@ -1098,5 +1311,6 @@ module.exports = {
   getBillPayments, createBillPayment, updateBillPaymentStatus,
   getClientActivity, getBlockedIps, blockIp, unblockIp,
   getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod,
-  updatePickupTracking
+  updatePickupTracking,
+  getAccounts, createAccount, updateAccount, deleteAccount
 };

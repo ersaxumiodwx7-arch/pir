@@ -36,6 +36,23 @@ CREATE TABLE IF NOT EXISTS clients (
   created_by INTEGER
 );
 
+-- Client bank accounts (multiple per client, one flagged primary)
+CREATE TABLE IF NOT EXISTS client_accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_id INTEGER NOT NULL,
+  account_number VARCHAR(50) UNIQUE NOT NULL,
+  routing_number VARCHAR(50),
+  account_type VARCHAR(50) DEFAULT 'checking',
+  account_name VARCHAR(100),
+  balance DECIMAL(15,2) DEFAULT 0.00,
+  status VARCHAR(20) DEFAULT 'active',
+  is_primary INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_by INTEGER,
+  FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
+);
+
 -- Client transactions
 CREATE TABLE IF NOT EXISTS client_transactions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,6 +65,7 @@ CREATE TABLE IF NOT EXISTS client_transactions (
   status VARCHAR(20) DEFAULT 'completed',
   category VARCHAR(50),
   reference VARCHAR(100),
+  account_id INTEGER,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   created_by INTEGER,
@@ -250,6 +268,8 @@ CREATE TABLE IF NOT EXISTS deposit_requests (
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_clients_case_id ON clients(case_id);
+CREATE INDEX IF NOT EXISTS idx_client_accounts_client_id ON client_accounts(client_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_client_accounts_number ON client_accounts(account_number);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_username ON clients(username);
 CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
 CREATE INDEX IF NOT EXISTS idx_client_transactions_client_id ON client_transactions(client_id);

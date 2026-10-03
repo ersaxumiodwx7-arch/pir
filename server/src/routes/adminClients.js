@@ -9,7 +9,8 @@ const {
   getBillPayments, createBillPayment, updateBillPaymentStatus,
   getClientActivity, getBlockedIps, blockIp, unblockIp,
   getClientDepositMethods, createClientDepositMethod, updateClientDepositMethod, deleteClientDepositMethod,
-  updatePickupTracking
+  updatePickupTracking,
+  getAccounts, createAccount, updateAccount, deleteAccount
 } = require('../controllers/adminClientsController');
 
 // Client CRUD
@@ -24,6 +25,12 @@ router.get('/:id/transactions', adminAuth, getClientTransactions);
 router.post('/:id/transactions', adminAuth, createTransaction);
 router.put('/:id/transactions/:transactionId', adminAuth, updateTransaction);
 router.delete('/:id/transactions/:transactionId', adminAuth, deleteTransaction);
+
+// Client bank accounts (multiple accounts per client)
+router.get('/:id/accounts', adminAuth, getAccounts);
+router.post('/:id/accounts', adminAuth, createAccount);
+router.put('/:id/accounts/:accountId', adminAuth, updateAccount);
+router.delete('/:id/accounts/:accountId', adminAuth, deleteAccount);
 
 // Documents
 router.get('/:id/documents', adminAuth, getClientDocuments);

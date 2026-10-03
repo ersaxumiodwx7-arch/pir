@@ -408,6 +408,76 @@ async function migrateClientSchema() {
       // Table may not exist yet - CREATE TABLE handles it
     }
 
+    // ===== Client bank accounts (multiple accounts per client) =====
+    try {
+      await pool.query(`CREATE TABLE IF NOT EXISTS client_accounts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        account_number VARCHAR(50) UNIQUE NOT NULL,
+        routing_number VARCHAR(50),
+        account_type VARCHAR(50) DEFAULT 'checking',
+        account_name VARCHAR(100),
+        balance DECIMAL(15,2) DEFAULT 0.00,
+        status VARCHAR(20) DEFAULT 'active',
+        is_primary INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER
+      )`);
+      await pool.query('CREATE INDEX IF NOT EXISTS idx_client_accounts_client_id ON client_accounts(client_id)');
+      console.log('Client accounts table ready');
+    } catch (e) {
+      if (!e.message.includes('already exists')) console.error('client_accounts migration warning:', e.message);
+    }
+
+    // account_id on client_transactions (which account a txn belongs to; NULL = primary)
+    try {
+      const ctCols = await tableColumns('client_transactions');
+      const hasAccountId = (ctCols.rows || []).some(c => c.name === 'account_id');
+      if (!hasAccountId && ctCols.rows.length > 0) {
+        await pool.query('ALTER TABLE client_transactions ADD COLUMN account_id INTEGER');
+        console.log('Schema migration: added client_transactions.account_id');
+      }
+    } catch (e) {
+      // Table may not exist yet
+    }
+
+    // Seed a primary account row for every client that has none
+    try {
+      const orphans = await pool.query(
+        `SELECT c.id, c.account_number, c.routing_number, c.display_balance, c.created_by
+         FROM clients c
+         WHERE NOT EXISTS (SELECT 1 FROM client_accounts a WHERE a.client_id = c.id)`
+      );
+      for (const c of orphans.rows) {
+        try {
+          let acctNum = c.account_number || null;
+          if (!acctNum) {
+            let generated = null;
+            for (let i = 0; i < 8 && !generated; i++) {
+              const candidate = '4' + Math.floor(Math.random() * 1e11).toString().padStart(11, '0');
+              const dupe = await pool.query('SELECT 1 FROM client_accounts WHERE account_number = $1', [candidate]);
+              if (dupe.rows.length === 0) generated = candidate;
+            }
+            acctNum = generated || ('4' + Date.now().toString());
+          }
+          await pool.query(
+            `INSERT INTO client_accounts (client_id, account_number, routing_number, account_type, account_name, balance, is_primary, created_by)
+             VALUES ($1, $2, $3, 'checking', 'Primary Checking', $4, 1, $5)`,
+            [c.id, acctNum, c.routing_number || null, parseFloat(c.display_balance) || 0, c.created_by || null]
+          );
+          if (!c.account_number) {
+            await pool.query('UPDATE clients SET account_number = $1 WHERE id = $2', [acctNum, c.id]);
+          }
+        } catch (rowErr) {
+          console.error('Primary account seed warning:', rowErr.message);
+        }
+      }
+      if (orphans.rows.length > 0) console.log(`Seeded primary bank account for ${orphans.rows.length} client(s)`);
+    } catch (e) {
+      // Tables may not exist yet - CREATE TABLE handles it
+    }
+
     // ===== Multi-Admin System =====
     // Admin accounts table (super admin + normal admins with subscriptions)
     try {
