@@ -110,6 +110,49 @@ const ClientDashboard = () => {
   // Find the latest unread pickup notification
   const pickupNotif = recent_notifications.find(n => !n.is_read && n.link_url === '/client/deposit');
 
+  // ===== Affected Branch Alert card ("AFFECTED BRANCH IN YOUR AREA") =====
+  const branchName = (client.branch_name || '').trim();
+  const hasBranchAlert = !!branchName;
+  const riskPct = client.branch_risk_level !== null && client.branch_risk_level !== undefined && client.branch_risk_level !== ''
+    ? Math.max(0, Math.min(100, parseInt(client.branch_risk_level, 10) || 0))
+    : null;
+  const riskInfo = riskPct === null
+    ? { label: 'UNKNOWN', color: '#64748b' }
+    : riskPct >= 70
+      ? { label: 'HIGH', color: '#ef4444' }
+      : riskPct >= 40
+        ? { label: 'MEDIUM', color: '#f59e0b' }
+        : { label: 'LOW', color: '#10b981' };
+  const perpHandle = (client.branch_perpetrator_name || '').trim();
+
+  // Extract coordinates from any Google Maps link: @lat,lng / ?q=lat,lng / ?ll=lat,lng / query= / center= / destination= or a plain "lat,lng" string
+  const getMapCoords = (link) => {
+    if (!link) return null;
+    const patterns = [
+      /@(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)/,
+      /[?&](?:q|ll|query|center|destination)=(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)/
+    ];
+    for (const re of patterns) {
+      const m = link.match(re);
+      if (m) {
+        const lat = parseFloat(m[1]);
+        const lng = parseFloat(m[2]);
+        if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+      }
+    }
+    const plain = link.match(/^\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$/);
+    if (plain) {
+      const lat = parseFloat(plain[1]);
+      const lng = parseFloat(plain[2]);
+      if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+    }
+    return null;
+  };
+  const branchCoords = getMapCoords(client.branch_maps_link);
+  const branchEmbedUrl = branchCoords
+    ? `https://maps.google.com/maps?q=${branchCoords.lat},${branchCoords.lng}&z=16&output=embed`
+    : null;
+
   return (
     <div className="client-dashboard">
       <div className="client-page-header">
@@ -423,6 +466,68 @@ const ClientDashboard = () => {
                 </button>
               )}
             </div>
+        </div>
+        )}
+
+        {/* Affected Branch In Your Area — hidden until the admin fills in branch data */}
+        {hasBranchAlert && (
+        <div className="client-card client-branch-card">
+          <div className="client-branch-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <h3>Affected Branch In Your Area</h3>
+          </div>
+          <div className="client-branch-map">
+            {branchEmbedUrl ? (
+              <iframe
+                title="Affected branch map"
+                src={branchEmbedUrl}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            ) : (
+              <div className="client-branch-map-fallback">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>Map location unavailable</span>
+              </div>
+            )}
+          </div>
+          <div className="client-branch-body">
+            <div className="client-branch-name">{branchName}</div>
+            {(client.branch_address || '').trim() && (
+              <div className="client-branch-address">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>{client.branch_address}</span>
+              </div>
+            )}
+            {riskPct !== null && (
+              <>
+                <div className="client-branch-risk-row">
+                  <span className="client-branch-risk-label">Risk Level</span>
+                  <span className="client-branch-risk-value" style={{ color: riskInfo.color }}>{riskPct}% {riskInfo.label}</span>
+                </div>
+                <div className="client-branch-risk-bar">
+                  <div className="client-branch-risk-fill" style={{ width: `${riskPct}%`, background: riskInfo.color }} />
+                </div>
+              </>
+            )}
+            {perpHandle && (
+              <>
+                <div className="client-branch-perps-title">Suspected Perpetrators</div>
+                <div className="client-branch-perp">
+                  <div className="client-branch-perp-avatar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <div>
+                    <div className="client-branch-perp-name">{perpHandle.startsWith('@') ? perpHandle : `@${perpHandle}`}</div>
+                    {(client.branch_perpetrator_role || '').trim() && (
+                      <div className="client-branch-perp-role">{client.branch_perpetrator_role}</div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
         )}
       </div>

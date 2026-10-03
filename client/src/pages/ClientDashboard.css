@@ -965,3 +965,171 @@
   border-color: #bfdbfe;
 }
 
+/* ===== Affected Branch Alert Card ===== */
+.client-branch-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.client-branch-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1e2a45;
+  color: #fff;
+  padding: 14px 18px;
+}
+
+.client-branch-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.client-branch-header svg {
+  flex-shrink: 0;
+}
+
+.client-branch-map {
+  width: 100%;
+  height: 230px;
+  background: #e5e7eb;
+}
+
+.client-branch-map iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.client-branch-map-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #94a3b8;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.client-branch-body {
+  padding: 16px 18px 18px;
+}
+
+.client-branch-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.client-branch-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.client-branch-address svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.client-branch-risk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.client-branch-risk-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.client-branch-risk-value {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.client-branch-risk-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.client-branch-risk-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.client-branch-perps-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.client-branch-perps-title::before,
+.client-branch-perps-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.client-branch-perp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.client-branch-perp-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.client-branch-perp-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.client-branch-perp-role {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+

@@ -506,6 +506,41 @@ const AdminClientDetail = () => {
             This representative appears on the client's dashboard. Clients reach them via the phone number above — leave it blank to show the contact button as unavailable.
           </p>
 
+          {/* Affected Branch Alert (shown to client as "AFFECTED BRANCH IN YOUR AREA" card) */}
+          <div className="admin-card-header" style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+            <h3>Affected Branch Alert</h3>
+            {!editMode && (
+              <button className="admin-btn admin-btn-outline" onClick={() => setEditMode(true)}>Edit</button>
+            )}
+          </div>
+          <div className="admin-form-grid">
+            {[
+              { key: 'branch_name', label: 'Branch Name', type: 'text', placeholder: 'e.g. Wells Fargo – Downtown' },
+              { key: 'branch_address', label: 'Branch Address', type: 'text', placeholder: 'e.g. 232 E University Dr, Tempe, AZ 85283, United States' },
+              { key: 'branch_maps_link', label: 'Google Maps Link (renders map on client dashboard)', type: 'url', placeholder: 'https://maps.google.com/... or https://maps.app.goo.gl/...' },
+              { key: 'branch_risk_level', label: 'Risk Level % (0–100)', type: 'number', placeholder: 'e.g. 69' },
+              { key: 'branch_perpetrator_name', label: 'Suspected Perpetrator Handle', type: 'text', placeholder: 'e.g. @Sudoearn' },
+              { key: 'branch_perpetrator_role', label: 'Perpetrator Role', type: 'text', placeholder: 'e.g. TELLER' },
+            ].map(field => (
+              <div key={field.key} className="admin-form-field">
+                <label>{field.label}</label>
+                {editMode ? (
+                  <input
+                    type={field.type}
+                    value={editData[field.key] ?? ''}
+                    onChange={(e) => setEditData({ ...editData, [field.key]: field.key === 'branch_risk_level' ? (e.target.value === '' ? null : parseInt(e.target.value, 10)) : e.target.value })}
+                    placeholder={field.placeholder}
+                  />
+                ) : (
+                  <div className="admin-detail-value">{field.key === 'branch_risk_level' ? ((client[field.key] ?? '') !== '' && client[field.key] !== null ? `${client[field.key]}%` : '—') : (client[field.key] || '—')}</div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px', marginBottom: 0 }}>
+            Paste any Google Maps link for the branch — coordinates found in the link (e.g. @33.4255,-111.9400 or ?q=33.4255,-111.9400) render a live map on the client dashboard. Entering a Branch Name activates the "Affected Branch In Your Area" card; clearing every field hides it. Risk %: 70+ shows HIGH (red), 40–69 MEDIUM (amber), below 40 LOW (green).
+          </p>
+
           <div className="admin-detail-meta">
             <span>Case ID: <strong>{client.case_id}</strong></span>
             <span>Sign-in ID: <strong>{client.username || client.case_id}</strong></span>

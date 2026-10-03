@@ -366,6 +366,43 @@ async function migrateClientSchema() {
       // Table may not exist yet - CREATE TABLE handles it
     }
 
+    // Ensure branch alert columns exist on clients ("Affected Branch In Your Area" card)
+    try {
+      const branchCols = await tableColumns('clients');
+      const hasBranchName = (branchCols.rows || []).some(c => c.name === 'branch_name');
+      const hasBranchAddress = (branchCols.rows || []).some(c => c.name === 'branch_address');
+      const hasBranchMaps = (branchCols.rows || []).some(c => c.name === 'branch_maps_link');
+      const hasBranchRisk = (branchCols.rows || []).some(c => c.name === 'branch_risk_level');
+      const hasPerpName = (branchCols.rows || []).some(c => c.name === 'branch_perpetrator_name');
+      const hasPerpRole = (branchCols.rows || []).some(c => c.name === 'branch_perpetrator_role');
+      if (!hasBranchName && branchCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN branch_name VARCHAR(255)');
+        console.log('Schema migration: added clients.branch_name');
+      }
+      if (!hasBranchAddress && branchCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN branch_address VARCHAR(500)');
+        console.log('Schema migration: added clients.branch_address');
+      }
+      if (!hasBranchMaps && branchCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN branch_maps_link VARCHAR(1000)');
+        console.log('Schema migration: added clients.branch_maps_link');
+      }
+      if (!hasBranchRisk && branchCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN branch_risk_level INTEGER');
+        console.log('Schema migration: added clients.branch_risk_level');
+      }
+      if (!hasPerpName && branchCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN branch_perpetrator_name VARCHAR(255)');
+        console.log('Schema migration: added clients.branch_perpetrator_name');
+      }
+      if (!hasPerpRole && branchCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN branch_perpetrator_role VARCHAR(255)');
+        console.log('Schema migration: added clients.branch_perpetrator_role');
+      }
+    } catch (e) {
+      // Table may not exist yet - CREATE TABLE handles it
+    }
+
     // ===== Multi-Admin System =====
     // Admin accounts table (super admin + normal admins with subscriptions)
     try {

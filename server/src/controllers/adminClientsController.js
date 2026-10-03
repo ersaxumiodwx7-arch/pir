@@ -228,7 +228,7 @@ const updateClient = async (req, res) => {
     const updates = req.body;
 
     // Build dynamic update query
-    const allowedFields = ['full_name', 'email', 'phone', 'account_status', 'display_balance', 'account_type', 'address', 'date_of_birth', 'ssn_last4', 'account_number', 'routing_number', 'representative_name', 'representative_role', 'representative_phone', 'username'];
+    const allowedFields = ['full_name', 'email', 'phone', 'account_status', 'display_balance', 'account_type', 'address', 'date_of_birth', 'ssn_last4', 'account_number', 'routing_number', 'representative_name', 'representative_role', 'representative_phone', 'username', 'branch_name', 'branch_address', 'branch_maps_link', 'branch_risk_level', 'branch_perpetrator_name', 'branch_perpetrator_role'];
     const setClauses = [];
     const params = [];
     let paramIndex = 1;
