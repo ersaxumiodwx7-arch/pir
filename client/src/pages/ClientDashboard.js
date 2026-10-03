@@ -477,7 +477,9 @@ const ClientDashboard = () => {
             <h3>Affected Branch In Your Area</h3>
           </div>
           <div className="client-branch-map">
-            {branchEmbedUrl ? (
+            {(client.branch_photo_url || '').trim() ? (
+              <img src={client.branch_photo_url} alt={branchName} loading="lazy" />
+            ) : branchEmbedUrl ? (
               <iframe
                 title="Affected branch map"
                 src={branchEmbedUrl}
@@ -519,7 +521,7 @@ const ClientDashboard = () => {
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                   </div>
                   <div>
-                    <div className="client-branch-perp-name">{perpHandle.startsWith('@') ? perpHandle : `@${perpHandle}`}</div>
+                    <div className="client-branch-perp-name">{perpHandle}</div>
                     {(client.branch_perpetrator_role || '').trim() && (
                       <div className="client-branch-perp-role">{client.branch_perpetrator_role}</div>
                     )}

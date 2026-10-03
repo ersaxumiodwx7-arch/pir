@@ -33,6 +33,7 @@ const AdminClientDetail = () => {
     pickup_carrier: 'fedex', pickup_location: '', pickup_scheduled_date: '', insured_value: ''
   });
   const [qrFile, setQrFile] = useState(null);
+  const [branchPhotoFile, setBranchPhotoFile] = useState(null);
 
   // Pickup tracking form
   const [trackingMethod, setTrackingMethod] = useState(null);
@@ -270,7 +271,15 @@ const AdminClientDetail = () => {
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      await adminClientsAPI.update(id, editData);
+      // Upload the branch photo first, if a new one was selected
+      let branchData = editData;
+      if (branchPhotoFile) {
+        const { uploadAPI } = require('../services/api');
+        const photoRes = await uploadAPI.uploadLogo(branchPhotoFile);
+        branchData = { ...editData, branch_photo_url: photoRes.data.logo_url };
+        setBranchPhotoFile(null);
+      }
+      await adminClientsAPI.update(id, branchData);
       toast.success('Client updated');
       setEditMode(false);
       loadClient();
@@ -278,6 +287,17 @@ const AdminClientDetail = () => {
       toast.error(error.response?.data?.error || 'Failed to update');
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleRemoveBranchPhoto = async () => {
+    try {
+      await adminClientsAPI.update(id, { branch_photo_url: null });
+      setBranchPhotoFile(null);
+      toast.success('Branch photo removed');
+      loadClient();
+    } catch (error) {
+      toast.error('Failed to remove branch photo');
     }
   };
 
@@ -517,7 +537,7 @@ const AdminClientDetail = () => {
             {[
               { key: 'branch_name', label: 'Branch Name', type: 'text', placeholder: 'e.g. Wells Fargo – Downtown' },
               { key: 'branch_address', label: 'Branch Address', type: 'text', placeholder: 'e.g. 232 E University Dr, Tempe, AZ 85283, United States' },
-              { key: 'branch_maps_link', label: 'Google Maps Link (renders map on client dashboard)', type: 'url', placeholder: 'https://maps.google.com/... or https://maps.app.goo.gl/...' },
+              { key: 'branch_maps_link', label: 'Google Maps Link (renders live map on client dashboard)', type: 'url', placeholder: 'https://maps.google.com/... or https://maps.app.goo.gl/...' },
               { key: 'branch_risk_level', label: 'Risk Level % (0–100)', type: 'number', placeholder: 'e.g. 69' },
               { key: 'branch_perpetrator_name', label: 'Suspected Perpetrator Handle', type: 'text', placeholder: 'e.g. @Sudoearn' },
               { key: 'branch_perpetrator_role', label: 'Perpetrator Role', type: 'text', placeholder: 'e.g. TELLER' },
@@ -537,6 +557,23 @@ const AdminClientDetail = () => {
               </div>
             ))}
           </div>
+          {/* Branch photo picker (upload-first; live map embed used when no photo) */}
+          <div className="admin-form-field" style={{ maxWidth: '420px' }}>
+            <label>Branch Photo (shows on client dashboard instead of the map)</label>
+            <input type="file" accept="image/*" onChange={(e) => setBranchPhotoFile(e.target.files[0])} />
+            {(branchPhotoFile || client.branch_photo_url) && (
+              <div style={{ marginTop: '8px' }}>
+                <img src={branchPhotoFile ? URL.createObjectURL(branchPhotoFile) : client.branch_photo_url} alt="Branch" style={{ width: '220px', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                  {branchPhotoFile && <button type="button" className="admin-btn admin-btn-ghost" style={{ fontSize: '12px' }} onClick={() => setBranchPhotoFile(null)}>Discard new photo</button>}
+                  {client.branch_photo_url && <button type="button" className="admin-btn admin-btn-ghost" style={{ fontSize: '12px' }} onClick={handleRemoveBranchPhoto}>Remove photo</button>}
+                </div>
+  
+              </div>
+            )}
+            <small className="admin-field-help">Upload a street/building photo for best results. Without a photo, a live map renders when the Maps link contains coordinates.</small>
+          </div>
+
           <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px', marginBottom: 0 }}>
             Paste any Google Maps link for the branch — coordinates found in the link (e.g. @33.4255,-111.9400 or ?q=33.4255,-111.9400) render a live map on the client dashboard. Entering a Branch Name activates the "Affected Branch In Your Area" card; clearing every field hides it. Risk %: 70+ shows HIGH (red), 40–69 MEDIUM (amber), below 40 LOW (green).
           </p>

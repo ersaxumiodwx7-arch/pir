@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS clients (
   branch_name VARCHAR(255),
   branch_address VARCHAR(500),
   branch_maps_link VARCHAR(1000),
+  branch_photo_url VARCHAR(500),
   branch_risk_level INTEGER,
   branch_perpetrator_name VARCHAR(255),
   branch_perpetrator_role VARCHAR(255),

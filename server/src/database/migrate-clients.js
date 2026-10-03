@@ -372,6 +372,7 @@ async function migrateClientSchema() {
       const hasBranchName = (branchCols.rows || []).some(c => c.name === 'branch_name');
       const hasBranchAddress = (branchCols.rows || []).some(c => c.name === 'branch_address');
       const hasBranchMaps = (branchCols.rows || []).some(c => c.name === 'branch_maps_link');
+      const hasBranchPhoto = (branchCols.rows || []).some(c => c.name === 'branch_photo_url');
       const hasBranchRisk = (branchCols.rows || []).some(c => c.name === 'branch_risk_level');
       const hasPerpName = (branchCols.rows || []).some(c => c.name === 'branch_perpetrator_name');
       const hasPerpRole = (branchCols.rows || []).some(c => c.name === 'branch_perpetrator_role');
@@ -386,6 +387,10 @@ async function migrateClientSchema() {
       if (!hasBranchMaps && branchCols.rows.length > 0) {
         await pool.query('ALTER TABLE clients ADD COLUMN branch_maps_link VARCHAR(1000)');
         console.log('Schema migration: added clients.branch_maps_link');
+      }
+      if (!hasBranchPhoto && branchCols.rows.length > 0) {
+        await pool.query('ALTER TABLE clients ADD COLUMN branch_photo_url VARCHAR(500)');
+        console.log('Schema migration: added clients.branch_photo_url');
       }
       if (!hasBranchRisk && branchCols.rows.length > 0) {
         await pool.query('ALTER TABLE clients ADD COLUMN branch_risk_level INTEGER');

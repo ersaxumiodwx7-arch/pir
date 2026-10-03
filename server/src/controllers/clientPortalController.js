@@ -6,7 +6,7 @@ const getDashboard = async (req, res) => {
     const clientId = req.client.clientId;
 
     const clientResult = await pool.query(
-      `SELECT id, case_id, full_name, email, phone, account_status, display_balance as balance, account_type, account_number, routing_number, representative_name, representative_role, representative_phone, branch_name, branch_address, branch_maps_link, branch_risk_level, branch_perpetrator_name, branch_perpetrator_role, created_at, last_login_at FROM clients WHERE id = $1`,
+      `SELECT id, case_id, full_name, email, phone, account_status, display_balance as balance, account_type, account_number, routing_number, representative_name, representative_role, representative_phone, branch_name, branch_address, branch_maps_link, branch_photo_url, branch_risk_level, branch_perpetrator_name, branch_perpetrator_role, created_at, last_login_at FROM clients WHERE id = $1`,
       [clientId]
     );
 
