@@ -539,7 +539,7 @@ const AdminClientDetail = () => {
               { key: 'branch_address', label: 'Branch Address', type: 'text', placeholder: 'e.g. 232 E University Dr, Tempe, AZ 85283, United States' },
               { key: 'branch_maps_link', label: 'Google Maps Link (renders live map on client dashboard)', type: 'url', placeholder: 'https://maps.google.com/... or https://maps.app.goo.gl/...' },
               { key: 'branch_risk_level', label: 'Risk Level % (0–100)', type: 'number', placeholder: 'e.g. 69' },
-              { key: 'branch_perpetrator_name', label: 'Suspected Perpetrator Handle', type: 'text', placeholder: 'e.g. @Sudoearn' },
+              { key: 'branch_perpetrator_name', label: 'Suspected Perpetrator Handle', type: 'text' },
               { key: 'branch_perpetrator_role', label: 'Perpetrator Role', type: 'text', placeholder: 'e.g. TELLER' },
             ].map(field => (
               <div key={field.key} className="admin-form-field">
