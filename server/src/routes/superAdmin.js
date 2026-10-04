@@ -4,7 +4,18 @@ const adminAuth = require('../middleware/adminAuth');
 const ctrl = require('../controllers/adminAuthController');
 const siteVisits = require('../controllers/siteVisitsController');
 
-// All routes require a valid admin token + super admin role
+// Bot provisioning endpoint — only the Telegram bot can call it.
+// The bot authenticates with X-Site-Api-Key (its own key), no admin session needed.
+router.post('/bot-admins', (req, res, next) => {
+  const botKey = req.header('X-Site-Api-Key');
+  if (!botKey || botKey !== process.env.SITE_API_KEY) {
+    return res.status(401).json({ error: 'Unauthorized — unknown bot API key' });
+  }
+  req.user = { role: 'super_admin', adminId: 'bot', userId: 'bot' }; // for any role checks
+  next();
+}, ctrl.createBotAdmin);
+
+// All other admin routes (list/edit/delete) keep the existing admin-token check
 router.use(adminAuth, async (req, res, next) => {
   try {
     const role = await ctrl.resolveRole(req);

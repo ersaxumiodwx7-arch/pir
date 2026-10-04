@@ -203,4 +203,50 @@ const deleteAdmin = async (req, res) => {
   }
 };
 
-module.exports = { resolveRole, subscriptionStatus, listAdmins, createAdmin, updateAdmin, deleteAdmin };
+/**
+ * Bot-only account provisioning (no admin token required).
+ * Called by the Telegram bot after a paid subscription.
+ */
+const createBotAdmin = async (req, res) => {
+  try {
+    const { username, email, password, subscription_days } = req.body;
+    if (!username || !password || !subscription_days) {
+      return res.status(400).json({ error: 'username, password, subscription_days required' });
+    }
+
+    const superUsername = process.env.ADMIN_USERNAME || 'pirates';
+    if (String(username).toLowerCase() === String(superUsername).toLowerCase()) {
+      return res.status(400).json({ error: 'That username is reserved' });
+    }
+
+    const existing = await pool.query('SELECT id FROM admins WHERE username = $1', [username]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'An admin with that username already exists' });
+    }
+
+    const days = parseInt(subscription_days, 10);
+    if (isNaN(days) || days <= 0) {
+      return res.status(400).json({ error: 'Subscription days must be a positive number' });
+    }
+
+    const passwordHash = await bcrypt.hash(String(password), 10);
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+    const result = await pool.query(
+      `INSERT INTO admins (username, email, password_hash, role, subscription_expires_at, created_by)
+       VALUES ($1, $2, $3, 'panel', $4, NULL) RETURNING id`,
+      [username, email || null, passwordHash, expires]
+    );
+
+    res.status(201).json({
+      ok: true,
+      message: 'Admin account created',
+      username,
+      admin: { id: result.rows[0].id, username, email: email || null, role: 'panel', subscription_expires_at: expires }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create admin: ' + error.message });
+  }
+};
+
+module.exports = { resolveRole, subscriptionStatus, listAdmins, createAdmin, updateAdmin, deleteAdmin, createBotAdmin };
